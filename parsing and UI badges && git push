@@ -1,0 +1,147 @@
+[1mdiff --git a/database_manager.py b/database_manager.py[m
+[1mindex 8559ed1..5ccfb15 100644[m
+[1m--- a/database_manager.py[m
+[1m+++ b/database_manager.py[m
+[36m@@ -14,6 +14,7 @@[m [mdef process_and_save_bids(scraped_bids_list, db_session):[m
+             new_tender = Tender([m
+                 gem_bid_number=bid_data['gem_bid_number'],[m
+                 department_name=bid_data.get('department_name'),[m
+[32m+[m[32m                category=bid_data.get('category'),[m
+                 item_categories=bid_data.get('item_categories'),[m
+                 quantity=bid_data.get('quantity'),[m
+                 estimated_value=bid_data.get('estimated_value'),[m
+[1mdiff --git a/excel_exporter.py b/excel_exporter.py[m
+[1mindex 1d9ea8a..6a9d25c 100644[m
+[1m--- a/excel_exporter.py[m
+[1m+++ b/excel_exporter.py[m
+[36m@@ -21,6 +21,7 @@[m [mdef sync_latest_bids_to_excel():[m
+             bids_data.append({[m
+                 'id': bid.id,[m
+                 'gem_bid_number': bid.gem_bid_number,[m
+[32m+[m[32m                'category': getattr(bid, 'category', 'General') or 'General',[m
+                 'department_name': bid.department_name,[m
+                 'quantity': getattr(bid, 'quantity', 1) or 1,[m
+                 # Convert array of strings into a single comma-separated string for Excel readability[m
+[1mdiff --git a/models.py b/models.py[m
+[1mindex d9b1a2b..973e9ca 100644[m
+[1m--- a/models.py[m
+[1m+++ b/models.py[m
+[36m@@ -22,6 +22,7 @@[m [mclass Tender(Base):[m
+     id = Column(Integer, primary_key=True, index=True, autoincrement=True)[m
+     gem_bid_number = Column(String, unique=True, index=True, nullable=False)[m
+     department_name = Column(String, nullable=True)[m
+[32m+[m[32m    category = Column(String, nullable=True, default="General")[m
+     # Using JSON type for list of strings (compatible with SQLite)[m
+     item_categories = Column(JSON, nullable=True)[m
+     quantity = Column(Integer, nullable=True, default=1)[m
+[36m@@ -43,3 +44,10 @@[m [mtry:[m
+         conn.commit()[m
+ except Exception:[m
+     pass # Column already exists or error. SQLite will ignore silently.[m
+[32m+[m
+[32m+[m[32mtry:[m
+[32m+[m[32m    with engine.connect() as conn:[m
+[32m+[m[32m        conn.execute(text("ALTER TABLE tenders ADD COLUMN category VARCHAR(50) DEFAULT 'General'"))[m
+[32m+[m[32m        conn.commit()[m
+[32m+[m[32mexcept Exception:[m
+[32m+[m[32m    pass[m
+[1mdiff --git a/templates/index.html b/templates/index.html[m
+[1mindex 94e9811..b51bddc 100644[m
+[1m--- a/templates/index.html[m
+[1m+++ b/templates/index.html[m
+[36m@@ -173,17 +173,17 @@[m
+             user-select: none;[m
+             position: relative;[m
+         }[m
+[31m-        [m
+[32m+[m
+         th:hover {[m
+             color: white;[m
+             background-color: #242424;[m
+         }[m
+[31m-        [m
+[32m+[m
+         th.sort-asc::after {[m
+             content: " ▲";[m
+             font-size: 0.7rem;[m
+         }[m
+[31m-        [m
+[32m+[m
+         th.sort-desc::after {[m
+             content: " ▼";[m
+             font-size: 0.7rem;[m
+[36m@@ -348,18 +348,31 @@[m
+                 <thead>[m
+                     <tr>[m
+                         <th onclick="sortTable(0, 'string')">Bid Number</th>[m
+[31m-                        <th onclick="sortTable(1, 'string')">Department</th>[m
+[31m-                        <th onclick="sortTable(2, 'string')">Items / Equipment</th>[m
+[31m-                        <th onclick="sortTable(3, 'number')">Qty</th>[m
+[31m-                        <th onclick="sortTable(4, 'string')">EMD Amount</th>[m
+[31m-                        <th onclick="sortTable(5, 'date')">End Date</th>[m
+[31m-                        <th onclick="sortTable(6, 'string')">Tags</th>[m
+[32m+[m[32m                        <th onclick="sortTable(1, 'string')">Brand</th>[m
+[32m+[m[32m                        <th onclick="sortTable(2, 'string')">Department</th>[m
+[32m+[m[32m                        <th onclick="sortTable(3, 'string')">Items / Equipment</th>[m
+[32m+[m[32m                        <th onclick="sortTable(4, 'number')">Qty</th>[m
+[32m+[m[32m                        <th onclick="sortTable(5, 'string')">EMD Amount</th>[m
+[32m+[m[32m                        <th onclick="sortTable(6, 'date')">End Date</th>[m
+[32m+[m[32m                        <th onclick="sortTable(7, 'string')">Tags</th>[m
+                     </tr>[m
+                 </thead>[m
+                 <tbody id="tenders-body">[m
+                     {% for tender in tenders %}[m
+                     <tr data-id="{{ tender.id }}">[m
+                         <td class="bid-id">{{ tender.gem_bid_number }}</td>[m
+[32m+[m
+[32m+[m[32m                        {% set cat_class = "cat-general" %}[m
+[32m+[m[32m                        {% if tender.category|lower == 'q-line' %}{% set cat_class = "cat-q-line" %}[m
+[32m+[m[32m                        {% elif tender.category|lower == 'heidelco' %}{% set cat_class = "cat-heidelco" %}[m
+[32m+[m[32m                        {% elif tender.category|lower == 'poct' %}{% set cat_class = "cat-poct" %}[m
+[32m+[m[32m                        {% elif tender.category|lower == 'iqline' %}{% set cat_class = "cat-iqline" %}[m
+[32m+[m[32m                        {% endif %}[m
+[32m+[m
+[32m+[m[32m                        <td>[m
+[32m+[m[32m                            <span class="cat-badge {{ cat_class }}">{{ tender.category or 'General' }}</span>[m
+[32m+[m[32m                        </td>[m
+[32m+[m
+                         <td>[m
+                             <div class="department truncate" title="{{ tender.department_name }}">{{[m
+                                 tender.department_name or "N/A" }}</div>[m
+[36m@@ -377,7 +390,8 @@[m
+                             <span style="color: var(--text-secondary);">Nil / NA</span>[m
+                             {% endif %}[m
+                         </td>[m
+[31m-                        <td style="color: var(--text-primary); font-size: 0.9rem;" data-raw="{{ tender.bid_end_date.isoformat() if tender.bid_end_date else '' }}">[m
+[32m+[m[32m                        <td style="color: var(--text-primary); font-size: 0.9rem;"[m
+[32m+[m[32m                            data-raw="{{ tender.bid_end_date.isoformat() if tender.bid_end_date else '' }}">[m
+                             {{ tender.bid_end_date.strftime('%d %b %Y, %H:%M') if tender.bid_end_date else "N/A" }}[m
+                         </td>[m
+                         <td>[m
+[36m@@ -462,9 +476,19 @@[m
+             if (tender.mii_applicable) badges += '<span class="badge mii">MII</span>';[m
+             if (tender.mse_preference) badges += '<span class="badge mse">MSE</span>';[m
+ [m
+[32m+[m[32m            let cat_class = "cat-general";[m
+[32m+[m[32m            const cat_lower = (tender.category || "General").toLowerCase();[m
+[32m+[m[32m            if (cat_lower === "q-line") cat_class = "cat-q-line";[m
+[32m+[m[32m            else if (cat_lower === "heidelco") cat_class = "cat-heidelco";[m
+[32m+[m[32m            else if (cat_lower === "poct") cat_class = "cat-poct";[m
+[32m+[m[32m            else if (cat_lower === "iqline") cat_class = "cat-iqline";[m
+[32m+[m
+             return `[m
+                 <tr data-id="${tender.id}">[m
+                     <td class="bid-id">${tender.gem_bid_number}</td>[m
+[32m+[m[32m                    <td>[m
+[32m+[m[32m                        <span class="cat-badge ${cat_class}">${tender.category || 'General'}</span>[m
+[32m+[m[32m                    </td>[m
+                     <td>[m
+                         <div class="department truncate" title="${tender.department_name || 'N/A'}">${tender.department_name || 'N/A'}</div>[m
+                     </td>[m
+[36m@@ -512,13 +536,13 @@[m
+             rows.sort((a, b) => {[m
+                 let cellA = a.cells[columnIndex];[m
+                 let cellB = b.cells[columnIndex];[m
+[31m-                [m
+[32m+[m
+                 let valA = cellA.getAttribute("data-raw"
