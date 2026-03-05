@@ -86,8 +86,8 @@ async def read_dashboard(request: Request, db: Session = Depends(get_db)):
     """
     Main dashboard view. Fetches all tenders from SQLite and renders the UI.
     """
-    # Fetch all tenders sorted by end_date asc, quantity desc
-    tenders = db.query(Tender).order_by(Tender.bid_end_date.asc(), Tender.quantity.desc()).all()
+    # Fetch all tenders sorted by newest extracted first
+    tenders = db.query(Tender).order_by(Tender.created_at.desc(), Tender.id.desc()).all()
     
     # Process item_categories if it's stored as JSON list
     for t in tenders:
