@@ -26,12 +26,15 @@ class Tender(Base):
     # Using JSON type for list of strings (compatible with SQLite)
     item_categories = Column(JSON, nullable=True)
     quantity = Column(Integer, nullable=True, default=1)
-    estimated_value = Column(Float, nullable=True)
-    emd_amount = Column(Float, nullable=True)
-    bid_end_date = Column(DateTime, nullable=False)
+    estimated_value = Column(Float, nullable=True) # Could be blank
+    emd_amount = Column(Float, nullable=True) # Derived/Captured if possible
+    bid_start_date = Column(DateTime, nullable=True)
+    bid_end_date = Column(DateTime, nullable=True)
     mii_applicable = Column(Boolean, default=False)
     mse_preference = Column(Boolean, default=False)
     is_notified = Column(Boolean, default=False)
+    is_visited = Column(Boolean, default=False)
+    document_url = Column(String, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 # Create tables if they do not exist
@@ -48,6 +51,27 @@ except Exception:
 try:
     with engine.connect() as conn:
         conn.execute(text("ALTER TABLE tenders ADD COLUMN category VARCHAR(50) DEFAULT 'General'"))
+        conn.commit()
+except Exception:
+    pass
+
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE tenders ADD COLUMN bid_start_date DATETIME"))
+        conn.commit()
+except Exception:
+    pass
+
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE tenders ADD COLUMN is_visited BOOLEAN DEFAULT 0"))
+        conn.commit()
+except Exception:
+    pass
+
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE tenders ADD COLUMN document_url VARCHAR(500)"))
         conn.commit()
 except Exception:
     pass

@@ -27,9 +27,12 @@ class TenderCreate(BaseModel):
     quantity: Optional[int] = None
     estimated_value: Optional[float] = None
     emd_amount: Optional[float] = None
+    bid_start_date: Optional[datetime] = None
     bid_end_date: Optional[datetime] = None
     mii_applicable: Optional[bool] = False
     mse_preference: Optional[bool] = False
+    is_visited: Optional[bool] = False
+    document_url: Optional[str] = None
 
 class TenderUploadRequest(BaseModel):
     bids: List[TenderCreate]
@@ -57,11 +60,16 @@ async def read_dashboard(request: Request, db: Session = Depends(get_db)):
         else:
             t.items_str = t.item_categories if t.item_categories else "N/A"
             
+    # Default to sort by end_date asc, quantity desc
+    tenders = db.query(Tender).order_by(Tender.bid_end_date.asc(), Tender.quantity.desc()).all()
+    total = len(tenders) # Define total based on the new query
+        
     return templates.TemplateResponse("index.html", {
-        "request": request,
+        "request": request, 
         "tenders": tenders,
-        "total_tenders": len(tenders),
-        "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        "total_tenders": total,
+        "last_updated": datetime.now().strftime("%d %b %Y, %H:%M"),
+        "current_time": datetime.now()
     })
 
 @app.post("/api/tenders/upload")
@@ -105,11 +113,29 @@ async def get_latest_tenders(db: Session = Depends(get_db)):
             "category": getattr(t, 'category', 'General') or 'General',
             "items_str": ", ".join(items) if items else "N/A",
             "quantity": getattr(t, 'quantity', 1) or 1,
+            "bid_start_date": t.bid_start_date.isoformat() if getattr(t, 'bid_start_date', None) else None,
             "bid_end_date": t.bid_end_date.isoformat() if t.bid_end_date else None,
             "mii_applicable": t.mii_applicable,
-            "mse_preference": t.mse_preference
+            "mse_preference": t.mse_preference,
+            "is_visited": getattr(t, 'is_visited', False),
+            "document_url": getattr(t, 'document_url', None),
+            "is_notified": t.is_notified
         })
-    return {"tenders": result, "count": len(result)}
+    return {"count": len(result), "tenders": result}
+
+class VisitedUpdate(BaseModel):
+    is_visited: bool
+
+@app.post("/api/tenders/{tender_id}/visited")
+def update_visited_status(tender_id: int, status: VisitedUpdate, db: Session = Depends(get_db)):
+    tender = db.query(Tender).filter(Tender.id == tender_id).first()
+    if not tender:
+        raise HTTPException(status_code=404, detail="Tender not found")
+        
+    tender.is_visited = status.is_visited
+    db.commit()
+    db.refresh(tender) # Refresh to get the latest state from the DB
+    return {"message": "Status updated successfully", "id": tender.id, "is_visited": tender.is_visited}
 
 @app.get("/download-excel")
 async def download_excel():

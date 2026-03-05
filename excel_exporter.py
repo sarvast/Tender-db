@@ -24,6 +24,7 @@ def sync_latest_bids_to_excel():
                 'category': getattr(bid, 'category', 'General') or 'General',
                 'department_name': bid.department_name,
                 'quantity': getattr(bid, 'quantity', 1) or 1,
+                'bid_start_date': bid.bid_start_date.strftime('%Y-%m-%d %H:%M') if getattr(bid, 'bid_start_date', None) else '',
                 # Convert array of strings into a single comma-separated string for Excel readability
                 'item_categories': ", ".join(bid.item_categories) if bid.item_categories else "",
                 'estimated_value': bid.estimated_value,

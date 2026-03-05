@@ -19,9 +19,11 @@ def process_and_save_bids(scraped_bids_list, db_session):
                 quantity=bid_data.get('quantity'),
                 estimated_value=bid_data.get('estimated_value'),
                 emd_amount=bid_data.get('emd_amount'),
+                bid_start_date=bid_data.get('bid_start_date'),
                 bid_end_date=bid_data.get('bid_end_date'),
                 mii_applicable=bid_data.get('mii_applicable', False),
                 mse_preference=bid_data.get('mse_preference', False),
+                document_url=bid_data.get('document_url'),
                 is_notified=False # Nayi bid insert karte waqt is_notified strictly False
             )
             db_session.add(new_tender)
@@ -38,6 +40,16 @@ def process_and_save_bids(scraped_bids_list, db_session):
             new_cat = bid_data.get('category')
             if new_cat and getattr(existing_bid, 'category', 'General') == 'General' and new_cat != 'General':
                 existing_bid.category = new_cat
+                updated = True
+                
+            new_start = bid_data.get('bid_start_date')
+            if new_start and getattr(existing_bid, 'bid_start_date', None) is None:
+                existing_bid.bid_start_date = new_start
+                updated = True
+                
+            new_url = bid_data.get('document_url')
+            if new_url and getattr(existing_bid, 'document_url', None) is None:
+                existing_bid.document_url = new_url
                 updated = True
 
             if updated:
