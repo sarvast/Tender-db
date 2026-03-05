@@ -565,6 +565,22 @@
                 </tbody>
             </table>
 
+            <!-- Pagination Controls -->
+            <div id="pagination-bar"
+                style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-top: 1px solid var(--border-color);">
+                <span id="pagination-info" style="color: var(--text-secondary); font-size: 0.85rem;"></span>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="prev-page-btn" onclick="changePage(-1)"
+                        style="padding: 0.4rem 1rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--surface-color); color: var(--text-primary); cursor: pointer;">
+                        ← Prev
+                    </button>
+                    <button id="next-page-btn" onclick="changePage(1)"
+                        style="padding: 0.4rem 1rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--surface-color); color: var(--text-primary); cursor: pointer;">
+                        Next →
+                    </button>
+                </div>
+            </div>
+
             <div id="empty-state" class="empty-state" {% if total_tenders> 0 %}style="display: none;"{% endif %}>
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--border-color)"
                     stroke-width="1.5" style="margin-bottom: 15px;">
@@ -756,7 +772,49 @@
 
             // Re-append rows
             rows.forEach(row => tbody.appendChild(row));
+            applyPagination(); // Re-apply pagination after sort
         }
+
+        // --- PAGINATION LOGIC ---
+        const ROWS_PER_PAGE = 25;
+        let currentPage = 1;
+
+        function applyPagination() {
+            const tbody = document.getElementById('tenders-body');
+            // Only visible rows (after filter)
+            const visibleRows = Array.from(tbody.querySelectorAll('tr')).filter(r => r.style.display !== 'none');
+            const totalRows = visibleRows.length;
+            const totalPages = Math.max(1, Math.ceil(totalRows / ROWS_PER_PAGE));
+
+            // Clamp currentPage
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const start = (currentPage - 1) * ROWS_PER_PAGE;
+            const end = start + ROWS_PER_PAGE;
+
+            // Hide rows outside current page
+            visibleRows.forEach((row, idx) => {
+                row.style.display = (idx >= start && idx < end) ? '' : 'none';
+            });
+
+            // Update info text
+            const info = document.getElementById('pagination-info');
+            if (info) info.innerText = `Page ${currentPage} of ${totalPages} (${totalRows} results)`;
+
+            // Enable/Disable prev/next buttons
+            const prevBtn = document.getElementById('prev-page-btn');
+            const nextBtn = document.getElementById('next-page-btn');
+            if (prevBtn) prevBtn.disabled = currentPage <= 1;
+            if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+        }
+
+        function changePage(delta) {
+            currentPage += delta;
+            applyPagination();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
 
         // --- VISITED TOGGLE API ---
         async function toggleVisited(tenderId, checkboxElem) {
@@ -840,14 +898,21 @@
             if (visibleCount === totalRows) {
                 countLabel.innerText = "Showing all bids";
             } else {
-                countLabel.innerText = `Showing ${visibleCount} of ${totalRows} bids`;
+                countLabel.innerText = `Filtered: ${visibleCount} of ${totalRows} bids`;
             }
+
+            // Reset to first page whenever filter changes
+            currentPage = 1;
+            applyPagination();
         }
 
         // Attach event listeners to filter controls
         searchInput.addEventListener('input', applyFilters);
         brandFilter.addEventListener('change', applyFilters);
         hideVisitedFilter.addEventListener('change', applyFilters);
+
+        // Initialize pagination on page load
+        applyPagination();
 
         async function pollForNewTenders() {
             try {

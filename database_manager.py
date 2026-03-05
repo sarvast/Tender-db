@@ -1,4 +1,8 @@
 from models import Tender
+try:
+    from telegram_notifier import send_telegram_alert
+except Exception:
+    def send_telegram_alert(bid_data): pass  # Fallback if module missing
 
 def process_and_save_bids(scraped_bids_list, db_session):
     """
@@ -28,6 +32,8 @@ def process_and_save_bids(scraped_bids_list, db_session):
             )
             db_session.add(new_tender)
             new_bids_added += 1
+            # Send Telegram alert for new bid (no-op if token not configured)
+            send_telegram_alert(bid_data)
         else:
             # If bid exists, update fields that might have been modified in the schema
             updated = False
