@@ -50,8 +50,8 @@ async def read_dashboard(request: Request, db: Session = Depends(get_db)):
     """
     Main dashboard view. Fetches all tenders from SQLite and renders the UI.
     """
-    # Fetch all tenders, newest first
-    tenders = db.query(Tender).order_by(Tender.bid_end_date.desc()).all()
+    # Fetch all tenders sorted by end_date asc, quantity desc
+    tenders = db.query(Tender).order_by(Tender.bid_end_date.asc(), Tender.quantity.desc()).all()
     
     # Process item_categories if it's stored as JSON list
     for t in tenders:
@@ -59,15 +59,11 @@ async def read_dashboard(request: Request, db: Session = Depends(get_db)):
             t.items_str = ", ".join(t.item_categories)
         else:
             t.items_str = t.item_categories if t.item_categories else "N/A"
-            
-    # Default to sort by end_date asc, quantity desc
-    tenders = db.query(Tender).order_by(Tender.bid_end_date.asc(), Tender.quantity.desc()).all()
-    total = len(tenders) # Define total based on the new query
         
     return templates.TemplateResponse("index.html", {
         "request": request, 
         "tenders": tenders,
-        "total_tenders": total,
+        "total_tenders": len(tenders),
         "last_updated": datetime.now().strftime("%d %b %Y, %H:%M"),
         "current_time": datetime.now()
     })
