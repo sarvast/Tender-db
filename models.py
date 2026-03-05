@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timezone
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Boolean, JSON
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Boolean, JSON, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
 
@@ -24,6 +24,7 @@ class Tender(Base):
     department_name = Column(String, nullable=True)
     # Using JSON type for list of strings (compatible with SQLite)
     item_categories = Column(JSON, nullable=True)
+    quantity = Column(Integer, nullable=True, default=1)
     estimated_value = Column(Float, nullable=True)
     emd_amount = Column(Float, nullable=True)
     bid_end_date = Column(DateTime, nullable=False)
@@ -34,3 +35,11 @@ class Tender(Base):
 
 # Create tables if they do not exist
 Base.metadata.create_all(bind=engine)
+
+# Auto-migrate SQLite schema to ensure 'quantity' exists on older DBs
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE tenders ADD COLUMN quantity INTEGER DEFAULT 1"))
+        conn.commit()
+except Exception:
+    pass # Column already exists or error. SQLite will ignore silently.

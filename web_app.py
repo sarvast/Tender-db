@@ -23,6 +23,7 @@ class TenderCreate(BaseModel):
     gem_bid_number: str
     department_name: Optional[str] = None
     item_categories: Optional[List[str]] = None
+    quantity: Optional[int] = None
     estimated_value: Optional[float] = None
     emd_amount: Optional[float] = None
     bid_end_date: Optional[datetime] = None
@@ -101,6 +102,7 @@ async def get_latest_tenders(db: Session = Depends(get_db)):
             "gem_bid_number": t.gem_bid_number,
             "department_name": t.department_name,
             "items_str": ", ".join(items) if items else "N/A",
+            "quantity": getattr(t, 'quantity', 1) or 1,
             "bid_end_date": t.bid_end_date.isoformat() if t.bid_end_date else None,
             "mii_applicable": t.mii_applicable,
             "mse_preference": t.mse_preference

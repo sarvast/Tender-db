@@ -169,6 +169,24 @@
             font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+        
+        th:hover {
+            color: white;
+            background-color: #242424;
+        }
+        
+        th.sort-asc::after {
+            content: " ▲";
+            font-size: 0.7rem;
+        }
+        
+        th.sort-desc::after {
+            content: " ▼";
+            font-size: 0.7rem;
         }
 
         tbody tr {
@@ -329,12 +347,13 @@
             <table id="tenders-table" {% if total_tenders==0 %}style="display: none;" {% endif %}>
                 <thead>
                     <tr>
-                        <th>Bid Number</th>
-                        <th>Department</th>
-                        <th>Items / Equipment</th>
-                        <th>EMD Amount</th>
-                        <th>End Date</th>
-                        <th>Tags</th>
+                        <th onclick="sortTable(0, 'string')">Bid Number</th>
+                        <th onclick="sortTable(1, 'string')">Department</th>
+                        <th onclick="sortTable(2, 'string')">Items / Equipment</th>
+                        <th onclick="sortTable(3, 'number')">Qty</th>
+                        <th onclick="sortTable(4, 'string')">EMD Amount</th>
+                        <th onclick="sortTable(5, 'date')">End Date</th>
+                        <th onclick="sortTable(6, 'string')">Tags</th>
                     </tr>
                 </thead>
                 <tbody id="tenders-body">
@@ -348,14 +367,17 @@
                         <td>
                             <div class="items truncate" title="{{ tender.items_str }}">{{ tender.items_str }}</div>
                         </td>
-                        <td class="amount">
+                        <td style="color: var(--accent-pink); font-weight: 600;">
+                            {{ tender.quantity or 1 }}
+                        </td>
+                        <td class="amount" data-raw="{{ tender.emd_amount or 0 }}">
                             {% if tender.emd_amount %}
                             ₹ {{ "{:,.2f}".format(tender.emd_amount) }}
                             {% else %}
                             <span style="color: var(--text-secondary);">Nil / NA</span>
                             {% endif %}
                         </td>
-                        <td style="color: var(--text-primary); font-size: 0.9rem;">
+                        <td style="color: var(--text-primary); font-size: 0.9rem;" data-raw="{{ tender.bid_end_date.isoformat() if tender.bid_end_date else '' }}">
                             {{ tender.bid_end_date.strftime('%d %b %Y, %H:%M') if tender.bid_end_date else "N/A" }}
                         </td>
                         <td>
@@ -434,6 +456,7 @@
 
         function createTableRow(tender) {
             const dateStr = tender.bid_end_date ? new Date(tender.bid_end_date).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : "N/A";
+            const rawDate = tender.bid_end_date ? new Date(tender.bid_end_date).toISOString() : "";
 
             let badges = '<span class="badge new">NEW</span>';
             if (tender.mii_applicable) badges += '<span class="badge mii">MII</span>';
@@ -448,15 +471,66 @@
                     <td>
                         <div class="items truncate" title="${tender.items_str}">${tender.items_str}</div>
                     </td>
-                    <td class="amount">
-                        <span style="color: var(--text-secondary);">Sync Pending</span>
+                    <td style="color: var(--accent-pink); font-weight: 600;">
+                        ${tender.quantity || 1}
                     </td>
-                    <td style="color: var(--text-primary); font-size: 0.9rem;">
+                    <td class="amount" data-raw="0">
+                        <span style="color: var(--text-secondary);">Nil / NA</span>
+                    </td>
+                    <td style="color: var(--text-primary); font-size: 0.9rem;" data-raw="${rawDate}">
                         ${dateStr}
                     </td>
                     <td>${badges}</td>
                 </tr>
             `;
+        }
+
+        // --- SORTING LOGIC ---
+        let currentSortColumn = -1;
+        let isAscending = true;
+
+        function sortTable(columnIndex, type) {
+            const table = document.getElementById("tenders-table");
+            const tbody = document.getElementById("tenders-body");
+            const rows = Array.from(tbody.querySelectorAll("tr"));
+            const headers = table.querySelectorAll("th");
+
+            // Toggle direction if same column
+            if (currentSortColumn === columnIndex) {
+                isAscending = !isAscending;
+            } else {
+                isAscending = true;
+                currentSortColumn = columnIndex;
+            }
+
+            // Update header UI
+            headers.forEach(th => {
+                th.classList.remove("sort-asc", "sort-desc");
+            });
+            headers[columnIndex].classList.add(isAscending ? "sort-asc" : "sort-desc");
+
+            rows.sort((a, b) => {
+                let cellA = a.cells[columnIndex];
+                let cellB = b.cells[columnIndex];
+                
+                let valA = cellA.getAttribute("data-raw") || cellA.innerText.trim();
+                let valB = cellB.getAttribute("data-raw") || cellB.innerText.trim();
+
+                if (type === 'number') {
+                    valA = parseFloat(valA.replace(/[^0-9.-]+/g,"")) || 0;
+                    valB = parseFloat(valB.replace(/[^0-9.-]+/g,"")) || 0;
+                    return isAscending ? valA - valB : valB - valA;
+                } else if (type === 'date') {
+                    valA = valA ? new Date(valA).getTime() : 0;
+                    valB = valB ? new Date(valB).getTime() : 0;
+                    return isAscending ? valA - valB : valB - valA;
+                } else {
+                    return isAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                }
+            });
+
+            // Re-append rows
+            rows.forEach(row => tbody.appendChild(row));
         }
 
         async function pollForNewTenders() {

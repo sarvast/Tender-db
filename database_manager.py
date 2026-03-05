@@ -15,6 +15,7 @@ def process_and_save_bids(scraped_bids_list, db_session):
                 gem_bid_number=bid_data['gem_bid_number'],
                 department_name=bid_data.get('department_name'),
                 item_categories=bid_data.get('item_categories'),
+                quantity=bid_data.get('quantity'),
                 estimated_value=bid_data.get('estimated_value'),
                 emd_amount=bid_data.get('emd_amount'),
                 bid_end_date=bid_data.get('bid_end_date'),

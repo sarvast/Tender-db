@@ -22,6 +22,7 @@ def sync_latest_bids_to_excel():
                 'id': bid.id,
                 'gem_bid_number': bid.gem_bid_number,
                 'department_name': bid.department_name,
+                'quantity': getattr(bid, 'quantity', 1) or 1,
                 # Convert array of strings into a single comma-separated string for Excel readability
                 'item_categories': ", ".join(bid.item_categories) if bid.item_categories else "",
                 'estimated_value': bid.estimated_value,
@@ -34,6 +35,12 @@ def sync_latest_bids_to_excel():
             
         # Step 2 (Export): Data ko Pandas DataFrame mein load karo aur Excel banayo
         df = pd.DataFrame(bids_data)
+        
+        # Apply Sorting: Date closest first (Ascending), Quantity highest first (Descending)
+        if 'bid_end_date' in df.columns:
+             df['bid_end_date_dt'] = pd.to_datetime(df['bid_end_date'], errors='coerce')
+             df = df.sort_values(by=['bid_end_date_dt', 'quantity'], ascending=[True, False]).drop(columns=['bid_end_date_dt'])
+             
         excel_filename = "latest_poct_tenders.xlsx"
         df.to_excel(excel_filename, index=False, engine='openpyxl')
         print(f"Exported {len(bids_data)} new bids to {excel_filename}")
