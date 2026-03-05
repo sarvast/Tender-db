@@ -26,6 +26,22 @@ def process_and_save_bids(scraped_bids_list, db_session):
             )
             db_session.add(new_tender)
             new_bids_added += 1
+        else:
+            # If bid exists, update fields that might have been modified in the schema
+            updated = False
+            
+            new_qty = bid_data.get('quantity')
+            if new_qty is not None and getattr(existing_bid, 'quantity', 1) in (1, None) and new_qty != 1:
+                existing_bid.quantity = new_qty
+                updated = True
+                
+            new_cat = bid_data.get('category')
+            if new_cat and getattr(existing_bid, 'category', 'General') == 'General' and new_cat != 'General':
+                existing_bid.category = new_cat
+                updated = True
+
+            if updated:
+                new_bids_added += 1 # We technically didn't add a new bid, but we trigger a commit
             
     # Commit all new entries to the database
     if new_bids_added > 0:
