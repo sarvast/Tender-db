@@ -15,6 +15,9 @@ from excel_exporter import sync_latest_bids_to_excel
 
 app = FastAPI(title="GeM Tender Auto-Tracker")
 
+# In-memory store for scraper heartbeat (resets on server restart, that's fine)
+_scraper_heartbeat = {"last_seen": None}
+
 # Set up templates
 templates = Jinja2Templates(directory="templates")
 
@@ -91,6 +94,23 @@ async def upload_tenders(request: TenderUploadRequest, db: Session = Depends(get
     except Exception as e:
         print(f"API Upload Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/heartbeat")
+async def scraper_heartbeat():
+    """Called by local scraper at start of each run to update its last-seen timestamp."""
+    _scraper_heartbeat["last_seen"] = datetime.now().isoformat()
+    return {"status": "ok", "recorded_at": _scraper_heartbeat["last_seen"]}
+
+@app.get("/api/heartbeat")
+async def get_heartbeat():
+    """Returns when the scraper last connected. Used by the dashboard."""
+    last = _scraper_heartbeat["last_seen"]
+    if last:
+        delta = datetime.now() - datetime.fromisoformat(last)
+        minutes_ago = int(delta.total_seconds() / 60)
+        status = "ok" if minutes_ago < 30 else "stale"
+        return {"last_seen": last, "minutes_ago": minutes_ago, "status": status}
+    return {"last_seen": None, "minutes_ago": None, "status": "never"}
 
 @app.get("/api/tenders/latest")
 async def get_latest_tenders(db: Session = Depends(get_db)):
