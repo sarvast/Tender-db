@@ -1279,6 +1279,31 @@
 
         applyFilters();
 
+        // --- Cross-Tab Sync Logic ---
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'gem_hide_visited') {
+                document.getElementById('hideVisitedFilter').checked = (e.newValue === 'true');
+                applyFilters();
+            }
+            if (e.key === 'gem_brand_filter') {
+                document.getElementById('brandFilter').value = e.newValue;
+                applyFilters();
+            }
+            if (e.key === 'gem_status_filter') {
+                document.getElementById('statusFilter').value = e.newValue;
+                applyFilters();
+            }
+        });
+
+        // --- Live Polling Logic ---
+        function updateSyncTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
+            const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+            const syncEl = document.getElementById('sync-time');
+            if (syncEl) syncEl.innerText = `${dateStr}, ${timeStr}`;
+        }
+
         // --- Live Polling Logic ---
         async function fetchAnalytics() {
             try {
@@ -1385,19 +1410,15 @@
                     fetchAnalytics(); // Grab updated numbers
                 }
 
-                // Update Live Sync Time (IST format)
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
-                const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-                const syncEl = document.getElementById('sync-time');
-                if (syncEl) syncEl.innerText = `${dateStr}, ${timeStr}`;
+                updateSyncTime();
 
             } catch (e) {
                 console.error("Polling error: ", e);
             }
         }
 
-        // Fetch numbers instantly on page load
+        // Init on load
+        updateSyncTime();
         fetchAnalytics();
 
         // Poll every 35 seconds
