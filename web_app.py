@@ -22,6 +22,7 @@ templates = Jinja2Templates(directory="templates")
 class TenderCreate(BaseModel):
     gem_bid_number: str
     department_name: Optional[str] = None
+    category: Optional[str] = "General"
     item_categories: Optional[List[str]] = None
     quantity: Optional[int] = None
     estimated_value: Optional[float] = None
@@ -101,6 +102,7 @@ async def get_latest_tenders(db: Session = Depends(get_db)):
             "id": t.id,
             "gem_bid_number": t.gem_bid_number,
             "department_name": t.department_name,
+            "category": getattr(t, 'category', 'General') or 'General',
             "items_str": ", ".join(items) if items else "N/A",
             "quantity": getattr(t, 'quantity', 1) or 1,
             "bid_end_date": t.bid_end_date.isoformat() if t.bid_end_date else None,

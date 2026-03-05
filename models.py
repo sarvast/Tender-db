@@ -22,6 +22,7 @@ class Tender(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     gem_bid_number = Column(String, unique=True, index=True, nullable=False)
     department_name = Column(String, nullable=True)
+    category = Column(String, nullable=True, default="General")
     # Using JSON type for list of strings (compatible with SQLite)
     item_categories = Column(JSON, nullable=True)
     quantity = Column(Integer, nullable=True, default=1)
@@ -43,3 +44,10 @@ try:
         conn.commit()
 except Exception:
     pass # Column already exists or error. SQLite will ignore silently.
+
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE tenders ADD COLUMN category VARCHAR(50) DEFAULT 'General'"))
+        conn.commit()
+except Exception:
+    pass

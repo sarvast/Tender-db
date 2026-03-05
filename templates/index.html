@@ -173,17 +173,17 @@
             user-select: none;
             position: relative;
         }
-        
+
         th:hover {
             color: white;
             background-color: #242424;
         }
-        
+
         th.sort-asc::after {
             content: " ▲";
             font-size: 0.7rem;
         }
-        
+
         th.sort-desc::after {
             content: " ▼";
             font-size: 0.7rem;
@@ -348,18 +348,31 @@
                 <thead>
                     <tr>
                         <th onclick="sortTable(0, 'string')">Bid Number</th>
-                        <th onclick="sortTable(1, 'string')">Department</th>
-                        <th onclick="sortTable(2, 'string')">Items / Equipment</th>
-                        <th onclick="sortTable(3, 'number')">Qty</th>
-                        <th onclick="sortTable(4, 'string')">EMD Amount</th>
-                        <th onclick="sortTable(5, 'date')">End Date</th>
-                        <th onclick="sortTable(6, 'string')">Tags</th>
+                        <th onclick="sortTable(1, 'string')">Brand</th>
+                        <th onclick="sortTable(2, 'string')">Department</th>
+                        <th onclick="sortTable(3, 'string')">Items / Equipment</th>
+                        <th onclick="sortTable(4, 'number')">Qty</th>
+                        <th onclick="sortTable(5, 'string')">EMD Amount</th>
+                        <th onclick="sortTable(6, 'date')">End Date</th>
+                        <th onclick="sortTable(7, 'string')">Tags</th>
                     </tr>
                 </thead>
                 <tbody id="tenders-body">
                     {% for tender in tenders %}
                     <tr data-id="{{ tender.id }}">
                         <td class="bid-id">{{ tender.gem_bid_number }}</td>
+
+                        {% set cat_class = "cat-general" %}
+                        {% if tender.category|lower == 'q-line' %}{% set cat_class = "cat-q-line" %}
+                        {% elif tender.category|lower == 'heidelco' %}{% set cat_class = "cat-heidelco" %}
+                        {% elif tender.category|lower == 'poct' %}{% set cat_class = "cat-poct" %}
+                        {% elif tender.category|lower == 'iqline' %}{% set cat_class = "cat-iqline" %}
+                        {% endif %}
+
+                        <td>
+                            <span class="cat-badge {{ cat_class }}">{{ tender.category or 'General' }}</span>
+                        </td>
+
                         <td>
                             <div class="department truncate" title="{{ tender.department_name }}">{{
                                 tender.department_name or "N/A" }}</div>
@@ -377,7 +390,8 @@
                             <span style="color: var(--text-secondary);">Nil / NA</span>
                             {% endif %}
                         </td>
-                        <td style="color: var(--text-primary); font-size: 0.9rem;" data-raw="{{ tender.bid_end_date.isoformat() if tender.bid_end_date else '' }}">
+                        <td style="color: var(--text-primary); font-size: 0.9rem;"
+                            data-raw="{{ tender.bid_end_date.isoformat() if tender.bid_end_date else '' }}">
                             {{ tender.bid_end_date.strftime('%d %b %Y, %H:%M') if tender.bid_end_date else "N/A" }}
                         </td>
                         <td>
@@ -462,9 +476,19 @@
             if (tender.mii_applicable) badges += '<span class="badge mii">MII</span>';
             if (tender.mse_preference) badges += '<span class="badge mse">MSE</span>';
 
+            let cat_class = "cat-general";
+            const cat_lower = (tender.category || "General").toLowerCase();
+            if (cat_lower === "q-line") cat_class = "cat-q-line";
+            else if (cat_lower === "heidelco") cat_class = "cat-heidelco";
+            else if (cat_lower === "poct") cat_class = "cat-poct";
+            else if (cat_lower === "iqline") cat_class = "cat-iqline";
+
             return `
                 <tr data-id="${tender.id}">
                     <td class="bid-id">${tender.gem_bid_number}</td>
+                    <td>
+                        <span class="cat-badge ${cat_class}">${tender.category || 'General'}</span>
+                    </td>
                     <td>
                         <div class="department truncate" title="${tender.department_name || 'N/A'}">${tender.department_name || 'N/A'}</div>
                     </td>
@@ -512,13 +536,13 @@
             rows.sort((a, b) => {
                 let cellA = a.cells[columnIndex];
                 let cellB = b.cells[columnIndex];
-                
+
                 let valA = cellA.getAttribute("data-raw") || cellA.innerText.trim();
                 let valB = cellB.getAttribute("data-raw") || cellB.innerText.trim();
 
                 if (type === 'number') {
-                    valA = parseFloat(valA.replace(/[^0-9.-]+/g,"")) || 0;
-                    valB = parseFloat(valB.replace(/[^0-9.-]+/g,"")) || 0;
+                    valA = parseFloat(valA.replace(/[^0-9.-]+/g, "")) || 0;
+                    valB = parseFloat(valB.replace(/[^0-9.-]+/g, "")) || 0;
                     return isAscending ? valA - valB : valB - valA;
                 } else if (type === 'date') {
                     valA = valA ? new Date(valA).getTime() : 0;

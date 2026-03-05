@@ -21,6 +21,7 @@ def sync_latest_bids_to_excel():
             bids_data.append({
                 'id': bid.id,
                 'gem_bid_number': bid.gem_bid_number,
+                'category': getattr(bid, 'category', 'General') or 'General',
                 'department_name': bid.department_name,
                 'quantity': getattr(bid, 'quantity', 1) or 1,
                 # Convert array of strings into a single comma-separated string for Excel readability
