@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Database URL format: postgresql://user:password@localhost:5432/dbname
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/gem_tenders")
+# Database URL format: sqlite:///./gem_tenders.db
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./gem_tenders.db")
 
 # Setup the database engine
 engine = create_engine(DATABASE_URL)
