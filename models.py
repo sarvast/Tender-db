@@ -34,6 +34,7 @@ class Tender(Base):
     mse_preference = Column(Boolean, default=False)
     is_notified = Column(Boolean, default=False)
     is_visited = Column(Boolean, default=False)
+    status = Column(String, default="Open")  # Tracking: Open, Submitted, Won, Lost
     document_url = Column(String, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
@@ -72,6 +73,13 @@ except Exception:
 try:
     with engine.connect() as conn:
         conn.execute(text("ALTER TABLE tenders ADD COLUMN document_url VARCHAR(500)"))
+        conn.commit()
+except Exception:
+    pass
+
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE tenders ADD COLUMN status VARCHAR(20) DEFAULT 'Open'"))
         conn.commit()
 except Exception:
     pass

@@ -7,379 +7,758 @@
     <title>GeM Auto-Tracker | POCT Group</title>
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Heroicons for SVGs -->
+    <script src="https://unpkg.com/feather-icons"></script>
     <style>
         :root {
-            --bg-color: #121212;
-            --surface-color: #1e1e1e;
-            --surface-color-light: #2d2d2d;
-            --text-primary: #f5f5f5;
-            --text-secondary: #aaaaaa;
-            --accent-pink: #d81b60;
-            /* Soft, deep pink accent */
-            --accent-pink-hover: #e91e63;
-            --border-color: #333333;
+            /* Premium Dark Slate Palette */
+            --bg-color: #0B1120;
+            /* Deep slate background */
+            --surface-color: #111827;
+            /* Tailwind Gray-900 */
+            --surface-color-light: #1F2937;
+            /* Tailwind Gray-800 */
+            --surface-color-hover: #374151;
+            /* Tailwind Gray-700 */
+
+            --text-primary: #F9FAFB;
+            --text-secondary: #9CA3AF;
+
+            /* Accent Colors */
+            --accent-primary: #3B82F6;
+            /* Modern Blue */
+            --accent-primary-hover: #2563EB;
+            --accent-success: #10B981;
+            /* Emerald Green */
+            --accent-warning: #F59E0B;
+            /* Amber */
+            --accent-danger: #EF4444;
+            /* Red */
+            --accent-purple: #8B5CF6;
+            /* Purple */
+
+            --border-color: #374151;
+            /* Gray-700 */
+            --border-light: rgba(255, 255, 255, 0.05);
+
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+            --shadow-glow: 0 0 15px rgba(59, 130, 246, 0.3);
+
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
-            margin: 0;
-            padding: 0;
             background-color: var(--bg-color);
             color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Header / Navbar */
+        /* --- Custom Scrollbar --- */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--surface-color-light);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--surface-color-hover);
+        }
+
+        /* --- Header / Top Nav --- */
         header {
-            background-color: var(--surface-color);
+            background-color: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             padding: 1rem 2rem;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-light);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
 
         .logo {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 700;
-            letter-spacing: -0.5px;
-            color: white;
+            letter-spacing: -0.025em;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            color: var(--text-primary);
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-purple));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-glow);
         }
 
         .logo span {
-            color: var(--accent-pink);
+            color: var(--text-secondary);
+            font-weight: 400;
         }
 
         .header-actions {
             display: flex;
-            gap: 15px;
+            gap: 16px;
             align-items: center;
         }
 
         .time-badge {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: var(--text-secondary);
             background: var(--surface-color-light);
             padding: 6px 12px;
             border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid var(--border-light);
         }
 
-        .badge.new {
-            background-color: var(--accent-pink);
-            color: white;
-            animation: pulse 2s infinite;
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-success);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-success);
+            animation: pulse-green 2s infinite;
         }
 
-        .badge.open {
-            background-color: #4caf50;
-            color: white;
-        }
+        @keyframes pulse-green {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
 
-        .badge.closing {
-            background-color: #ff9800;
-            color: white;
-        }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+            }
 
-        .badge.closed {
-            background-color: #f44336;
-            color: white;
-        }
-
-        .badge.mii {
-            background-color: #03a9f4;
-            color: white;
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
         }
 
         .btn-download {
-            background-color: var(--accent-pink);
-            color: white;
+            background-color: var(--surface-color-light);
+            color: var(--text-primary);
             text-decoration: none;
-            padding: 8px 18px;
-            border-radius: 6px;
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
             font-weight: 500;
-            font-size: 0.9rem;
-            transition: all 0.2s ease;
-            border: 1px solid var(--accent-pink);
+            font-size: 0.875rem;
+            transition: var(--transition-fast);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .btn-download:hover {
-            background-color: var(--accent-pink-hover);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(216, 27, 96, 0.3);
+            background-color: var(--surface-color-hover);
+            border-color: var(--text-secondary);
         }
 
-        /* Dashboard Container */
+        /* --- Dashboard Container --- */
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 2rem;
             flex: 1;
             width: 100%;
-            box-sizing: border-box;
         }
 
-        /* Stats Cards Row */
+        /* --- Stats Grid --- */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
 
         .stat-card {
             background-color: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
             padding: 1.5rem;
             display: flex;
             flex-direction: column;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+            transition: transform var(--transition-fast);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--accent-primary);
+        }
+
+        .stat-card:nth-child(2)::before {
+            background-color: var(--accent-purple);
+        }
+
+        .stat-card:nth-child(3)::before {
+            background-color: var(--accent-warning);
+        }
+
+        .stat-card:nth-child(4)::before {
+            background-color: var(--accent-success);
+        }
+
+        .stat-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
         }
 
         .stat-title {
-            font-size: 0.85rem;
+            font-size: 0.875rem;
             color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-            font-weight: 600;
+            font-weight: 500;
+        }
+
+        .stat-icon {
+            color: var(--text-secondary);
+            opacity: 0.5;
         }
 
         .stat-value {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: 700;
             color: var(--text-primary);
+            letter-spacing: -0.025em;
         }
 
+        /* --- Unified Filter Bar --- */
+        .filter-bar {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .search-wrapper {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            width: 18px;
+            height: 18px;
+        }
+
+        .input-control {
+            width: 100%;
+            padding: 10px 12px 10px 38px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-family: inherit;
+            transition: var(--transition-fast);
+        }
+
+        .input-control:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        .select-control {
+            padding: 10px 36px 10px 12px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-family: inherit;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            min-width: 140px;
+        }
+
+        .select-control:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .toggle-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            user-select: none;
+            cursor: pointer;
+        }
+
+        /* --- Table Section --- */
         .table-container {
             background-color: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .table-header-row {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .table-header-row h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .result-count {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .table-wrapper {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .table-header {
-            padding: 1.2rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            background-color: #1a1a1a;
-        }
-
-        .table-header h2 {
-            margin: 0;
-            font-size: 1.1rem;
-            font-weight: 600;
         }
 
         table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             text-align: left;
         }
 
-        th,
-        td {
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
         th {
-            background-color: var(--surface-color);
+            background-color: rgba(255, 255, 255, 0.02);
             color: var(--text-secondary);
             font-weight: 500;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.05em;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
             cursor: pointer;
             user-select: none;
-            position: relative;
+            white-space: nowrap;
+            transition: background-color var(--transition-fast);
         }
 
         th:hover {
-            color: white;
-            background-color: #242424;
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
         }
 
         th.sort-asc::after {
-            content: " ▲";
-            font-size: 0.7rem;
+            content: " \2191";
         }
 
         th.sort-desc::after {
-            content: " ▼";
-            font-size: 0.7rem;
+            content: " \2193";
+        }
+
+        td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 0.875rem;
+            vertical-align: middle;
         }
 
         tbody tr {
-            transition: background-color 0.15s ease;
+            transition: background-color var(--transition-fast);
         }
 
         tbody tr:hover {
             background-color: rgba(255, 255, 255, 0.03);
         }
 
-        tr.is-visited {
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr.is-visited td {
             opacity: 0.6;
-            background-color: rgba(0, 0, 0, 0.2);
+            background-color: rgba(0, 0, 0, 0.1);
         }
 
-        .visited-cb {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            accent-color: var(--accent-pink);
-        }
-
-        .bid-id {
+        /* --- Specific Column Styling --- */
+        .bid-id-col {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-weight: 500;
             color: var(--text-primary);
-            font-weight: 600;
-            font-family: monospace;
-            font-size: 0.95rem;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            white-space: nowrap;
         }
 
-        .pdf-link {
-            color: var(--accent-blue);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 4px;
-            border-radius: 4px;
-            background-color: rgba(64, 150, 255, 0.1);
-            transition: all 0.2s;
-        }
-
-        .pdf-link:hover {
-            background-color: rgba(64, 150, 255, 0.2);
-            color: #69b1ff;
-        }
-
-        .pdf-link svg {
-            width: 14px;
-            height: 14px;
-        }
-
-        .department {
-            color: #d0d0d0;
-            font-size: 0.9rem;
-            max-width: 250px;
-        }
-
-        .items {
+        .pdf-icon {
             color: var(--text-secondary);
-            font-size: 0.85rem;
-            max-width: 300px;
+            transition: color var(--transition-fast);
         }
 
-        /* Truncation helper */
-        .truncate {
+        .pdf-icon:hover {
+            color: var(--accent-primary);
+        }
+
+        .cell-truncate {
+            max-width: 250px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        .amount {
-            font-family: monospace;
-            color: var(--text-primary);
-        }
-
-        .empty-state {
-            padding: 3rem;
-            text-align: center;
+        .text-dim {
             color: var(--text-secondary);
         }
 
-        .badge {
+        .qty-badge {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--accent-primary);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.75rem;
             display: inline-block;
-            padding: 3px 8px;
-            border-radius: 4px;
+        }
+
+        .amount-col {
+            font-family: ui-monospace, monospace;
+            font-weight: 500;
+        }
+
+        /* --- Status Tracking Dropdown --- */
+        .status-select {
+            padding: 4px 24px 4px 8px;
+            border-radius: 12px;
+            border: 1px solid transparent;
             font-size: 0.75rem;
             font-weight: 600;
-            margin-right: 5px;
-            margin-bottom: 4px;
-            background-color: var(--surface-color-light);
-            color: #ccc;
-            border: 1px solid #444;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 6px center;
+            transition: all 0.2s;
         }
 
-        .badge.mii {
-            border-color: #795548;
-            color: #d7ccc8;
+        /* Status Colors */
+        .status-Open {
+            background-color: rgba(156, 163, 175, 0.1);
+            color: var(--text-secondary);
+            border-color: rgba(156, 163, 175, 0.2);
         }
 
-        .badge.mse {
-            border-color: #546e7a;
-            color: #cfd8dc;
+        .status-Submitted {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--accent-primary);
+            border-color: rgba(59, 130, 246, 0.2);
         }
 
-        .badge.new {
-            background-color: rgba(216, 27, 96, 0.1);
-            border-color: var(--accent-pink);
-            color: var(--accent-pink);
+        .status-Won {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--accent-success);
+            border-color: rgba(16, 185, 129, 0.2);
         }
 
-        /* Toast Notification */
-        #toast-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
+        .status-Lost {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--accent-danger);
+            border-color: rgba(239, 68, 68, 0.2);
         }
 
-        .toast {
-            background-color: var(--surface-color-light);
-            color: white;
-            padding: 16px 24px;
-            border-radius: 8px;
-            margin-top: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            border-left: 4px solid var(--accent-pink);
+        .status-select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--surface-color-light);
+        }
+
+        .status-select option {
+            background-color: var(--surface-color);
+            color: var(--text-primary);
+        }
+
+        /* --- Badges --- */
+        .badges-wrapper {
             display: flex;
-            align-items: center;
-            gap: 12px;
-            opacity: 0;
-            transform: translateX(100%);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            flex-wrap: wrap;
+            gap: 4px;
         }
 
-        .toast.show {
-            opacity: 1;
-            transform: translateX(0);
+        .tag-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.05em;
         }
 
-        /* Mobile Responsive */
+        .tag-brand {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Brand Specific Colors */
+        .brand-q-line {
+            color: #60A5FA;
+            border-color: rgba(96, 165, 250, 0.3);
+            background: rgba(96, 165, 250, 0.05);
+        }
+
+        .brand-heidelco {
+            color: #34D399;
+            border-color: rgba(52, 211, 153, 0.3);
+            background: rgba(52, 211, 153, 0.05);
+        }
+
+        .brand-poct {
+            color: #A78BFA;
+            border-color: rgba(167, 139, 250, 0.3);
+            background: rgba(167, 139, 250, 0.05);
+        }
+
+        .brand-iqline {
+            color: #F87171;
+            border-color: rgba(248, 113, 113, 0.3);
+            background: rgba(248, 113, 113, 0.05);
+        }
+
+        .tag-state-new {
+            background-color: var(--accent-danger);
+            color: white;
+            animation: pulse-danger 2s infinite;
+        }
+
+        .tag-state-upcoming {
+            background-color: var(--accent-purple);
+            color: white;
+        }
+
+        .tag-state-closing {
+            background-color: var(--accent-warning);
+            color: #000;
+        }
+
+        .tag-state-closed {
+            background-color: var(--surface-color-light);
+            color: var(--text-secondary);
+            text-decoration: line-through;
+        }
+
+        .tag-flag-mii {
+            border: 1px solid var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .tag-flag-mse {
+            border: 1px solid var(--accent-warning);
+            color: var(--accent-warning);
+        }
+
+        @keyframes pulse-danger {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* --- Mobile Responsiveness --- */
+        @media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
         @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 12px;
+                padding: 1rem;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
             .container {
                 padding: 1rem;
             }
 
-            header {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-
             .stats-grid {
                 grid-template-columns: 1fr;
-                margin-bottom: 1rem;
+            }
+
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-wrapper,
+            .select-control {
+                width: 100%;
             }
 
             th,
             td {
-                padding: 0.8rem 1rem;
+                padding: 0.75rem 1rem;
             }
 
-            .logo {
-                justify-content: center;
+            .table-header-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
             }
+        }
+
+        /* --- Pagination UI --- */
+        .pagination-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background-color: rgba(255, 255, 255, 0.02);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .pagination-info {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .pagination-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-page {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .btn-page:hover:not(:disabled) {
+            background-color: var(--surface-color-hover);
+        }
+
+        .btn-page:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: var(--bg-color);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background-color: var(--accent-success);
+            color: white;
+            padding: 12px 24px;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 500;
+            box-shadow: var(--shadow-lg);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Custom Checkbox */
+        .custom-checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-primary);
+            cursor: pointer;
         }
     </style>
 </head>
@@ -388,355 +767,293 @@
 
     <header>
         <div class="logo">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-pink)" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
-                <path d="M2 12h20"></path>
-            </svg>
-            GeM<span>Tracker</span>
+            <div class="logo-icon">
+                <i data-feather="activity" style="color: white; width: 18px; height: 18px;"></i>
+            </div>
+            POCT Group <span
+                style="font-weight: 500; font-size: 1rem; color: var(--text-secondary); margin-left: 4px;">| GeM
+                Dashboard</span>
         </div>
         <div class="header-actions">
-            <span class="time-badge">Live DB Sycned: {{ last_updated }}</span>
-            <a href="/download-excel" class="btn-download">Download Excel</a>
+            <div class="time-badge">
+                <div class="pulse-dot"></div>
+                Live Sync: &nbsp;<span style="color: var(--text-primary);">{{ last_updated }}</span>
+            </div>
+            <a href="/download-excel" class="btn-download">
+                <i data-feather="download" style="width: 14px; height: 14px;"></i>
+                Export
+            </a>
         </div>
     </header>
 
     <div class="container">
 
+        <!-- Summary Cards -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-title">Total Tenders Captured</div>
-                <div class="stat-value">{{ total_tenders }}</div>
+                <div class="stat-top">
+                    <div class="stat-title">Total Extracted</div>
+                    <i data-feather="database" class="stat-icon" width="20"></i>
+                </div>
+                <!-- Dynamic calculation from jinja initially, updated via JS -->
+                <div class="stat-value" id="stat-total">{{ total_tenders }}</div>
             </div>
 
             <div class="stat-card">
-                <div class="stat-title">Active Monitoring</div>
-                <div class="stat-value"
-                    style="color: var(--text-secondary); font-size: 1.2rem; margin-top: auto; padding-bottom: 0.5rem;">
-                    Checking GeM Portal seamlessly in background
+                <div class="stat-top">
+                    <div class="stat-title">Pending Review (Open)</div>
+                    <i data-feather="alert-circle" class="stat-icon" width="20"></i>
                 </div>
+                <!-- Counting how many are not visited internally -->
+                <div class="stat-value" id="stat-open">-</div>
             </div>
 
             <div class="stat-card">
-                <div class="stat-title">System Status</div>
-                <div style="display: flex; align-items: center; gap: 8px; margin-top: auto; padding-bottom: 0.5rem;">
-                    <div
-                        style="width: 10px; height: 10px; border-radius: 50%; background-color: var(--accent-pink); box-shadow: 0 0 10px var(--accent-pink);">
-                    </div>
-                    <span style="font-weight: 500;">Online & Tracking</span>
+                <div class="stat-top">
+                    <div class="stat-title">Tracked: Submitted</div>
+                    <i data-feather="send" class="stat-icon" width="20"></i>
                 </div>
+                <div class="stat-value" id="stat-submitted">-</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-title">Tracked: Won</div>
+                    <i data-feather="award" class="stat-icon" width="20"></i>
+                </div>
+                <div class="stat-value" id="stat-won" style="color: var(--accent-success);">-</div>
             </div>
         </div>
 
-        <div class="filters-container"
-            style="background-color: var(--surface-color); padding: 1.2rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid var(--border-color); display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 200px;">
-                <input type="text" id="searchInput" placeholder="Search Bid No, Items, or Department..."
-                    style="width: 100%; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--surface-color-light); color: var(--text-primary);">
+        <!-- Unified Filter Bar -->
+        <div class="filter-bar">
+            <div class="search-wrapper">
+                <i data-feather="search" class="search-icon"></i>
+                <input type="text" id="searchInput" class="input-control"
+                    placeholder="Search Bid ID, Items, Department...">
             </div>
 
-            <div style="min-width: 150px;">
-                <select id="brandFilter"
-                    style="width: 100%; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--surface-color-light); color: var(--text-primary);">
-                    <option value="All">All Brands</option>
-                    <option value="Q-Line">Q-Line</option>
-                    <option value="Heidelco">Heidelco</option>
-                    <option value="POCT">POCT</option>
-                    <option value="iQline">iQline</option>
-                    <option value="General">General/Other</option>
-                </select>
-            </div>
+            <select id="brandFilter" class="select-control">
+                <option value="All">All Brands</option>
+                <option value="Q-Line">Q-Line</option>
+                <option value="Heidelco">Heidelco</option>
+                <option value="POCT">POCT</option>
+                <option value="iQline">iQline</option>
+                <option value="General">General / Other</option>
+            </select>
 
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-left: auto;">
-                <input type="checkbox" id="hideVisitedFilter"
-                    style="width: 16px; height: 16px; accent-color: var(--accent-pink); cursor: pointer;">
-                <label for="hideVisitedFilter"
-                    style="color: var(--text-secondary); cursor: pointer; user-select: none;">Hide Visited</label>
-            </div>
+            <select id="statusFilter" class="select-control">
+                <option value="All">All Tracking Status</option>
+                <option value="Open">Open</option>
+                <option value="Submitted">Submitted</option>
+                <option value="Won">Won</option>
+                <option value="Lost">Lost</option>
+            </select>
+
+            <label class="toggle-wrapper" title="Hide rows marked as visited">
+                <input type="checkbox" id="hideVisitedFilter" class="custom-checkbox">
+                Hide Visited
+            </label>
         </div>
 
+        <!-- Main Datatable -->
         <div class="table-container">
-            <div class="table-header">
-                <h2>Extracted Opportunities</h2>
-                <div id="filterResultCount" style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 5px;">
-                    Showing all bids</div>
+            <div class="table-header-row">
+                <h2>Opportunity Pipeline</h2>
+                <div id="filterResultCount" class="result-count">Showing all {{ total_tenders }} bids</div>
             </div>
 
-            <table id="tenders-table" {% if total_tenders==0 %}style="display: none;" {% endif %}>
-                <thead>
-                    <tr>
-                        <th onclick="sortTable(0, 'string')">Action</th>
-                        <th onclick="sortTable(1, 'string')">Bid Number</th>
-                        <th onclick="sortTable(2, 'string')">Brand</th>
-                        <th onclick="sortTable(3, 'string')">Department</th>
-                        <th onclick="sortTable(4, 'string')">Items / Equipment</th>
-                        <th onclick="sortTable(5, 'number')">Qty</th>
-                        <th onclick="sortTable(6, 'string')">EMD Amount</th>
-                        <th onclick="sortTable(7, 'date')">Start Date</th>
-                        <th onclick="sortTable(8, 'date')">End Date</th>
-                        <th onclick="sortTable(9, 'string')">Tags</th>
-                    </tr>
-                </thead>
-                <tbody id="tenders-body">
-                    {% for tender in tenders %}
-                    <tr data-id="{{ tender.id }}" class="{% if tender.is_visited %}is-visited{% endif %}">
-                        <td>
-                            <input type="checkbox" class="visited-cb" title="Mark as Visited"
-                                onclick="toggleVisited({{ tender.id }}, this)" {% if tender.is_visited %}checked{% endif
-                                %}>
-                        </td>
-                        <td class="bid-id">
-                            {{ tender.gem_bid_number }}
-                            {% if tender.document_url %}
-                            <a href="{{ tender.document_url }}" target="_blank" class="pdf-link" title="Download PDF">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="7 10 12 15 17 10"></polyline>
-                                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                                </svg>
-                            </a>
-                            {% endif %}
-                        </td>
+            <div class="table-wrapper">
+                <table id="tenders-table" {% if total_tenders==0 %}style="display: none;" {% endif %}>
+                    <thead>
+                        <tr>
+                            <th style="width: 40px; text-align: center;">View</th>
+                            <th onclick="sortTable(1, 'string')">Bid Details</th>
+                            <th onclick="sortTable(2, 'string')">Items & Specification</th>
+                            <th onclick="sortTable(3, 'number')">Qty</th>
+                            <th onclick="sortTable(4, 'number')">EMD (₹)</th>
+                            <th onclick="sortTable(5, 'date')">Timeline</th>
+                            <th onclick="sortTable(6, 'string')">Flags</th>
+                            <th onclick="sortTable(7, 'string')">Tracking Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tenders-body">
+                        {% for tender in tenders %}
+                        <!-- Data attributes embedded for sorting and filtering logic -->
+                        <tr data-id="{{ tender.id }}" class="{% if tender.is_visited %}is-visited{% endif %} row-data">
 
-                        {% set cat_class = "cat-general" %}
-                        {% if tender.category|lower == 'q-line' %}{% set cat_class = "cat-q-line" %}
-                        {% elif tender.category|lower == 'heidelco' %}{% set cat_class = "cat-heidelco" %}
-                        {% elif tender.category|lower == 'poct' %}{% set cat_class = "cat-poct" %}
-                        {% elif tender.category|lower == 'iqline' %}{% set cat_class = "cat-iqline" %}
-                        {% endif %}
+                            <!-- 0. Visited Checkbox -->
+                            <td style="text-align: center;">
+                                <input type="checkbox" class="custom-checkbox visited-cb"
+                                    onclick="toggleVisited('{{ tender.id }}', this)" {% if tender.is_visited %}checked{%
+                                    endif %}>
+                            </td>
 
-                        <td>
-                            <span class="cat-badge {{ cat_class }}">{{ tender.category or 'General' }}</span>
-                        </td>
-
-                        <td>
-                            <div class="department truncate" title="{{ tender.department_name }}">{{
-                                tender.department_name or "N/A" }}</div>
-                        </td>
-                        <td>
-                            <div class="items truncate" title="{{ tender.items_str }}">{{ tender.items_str }}</div>
-                        </td>
-                        <td style="color: var(--accent-pink); font-weight: 600;">
-                            {{ tender.quantity or 1 }}
-                        </td>
-                        <td class="amount" data-raw="{{ tender.emd_amount or 0 }}">
-                            {% if tender.emd_amount %}
-                            ₹ {{ "{:,.2f}".format(tender.emd_amount) }}
-                            {% else %}
-                            <span style="color: var(--text-secondary);">Nil / NA</span>
-                            {% endif %}
-                        </td>
-                        <td style="color: var(--text-secondary); font-size: 0.85rem;"
-                            data-raw="{{ tender.bid_start_date.isoformat() if tender.bid_start_date else '' }}">
-                            {{ tender.bid_start_date.strftime('%d %b %Y, %H:%M') if tender.bid_start_date else "N/A" }}
-                        </td>
-                        <td style="color: var(--text-primary); font-size: 0.9rem;"
-                            data-raw="{{ tender.bid_end_date.isoformat() if tender.bid_end_date else '' }}">
-                            {{ tender.bid_end_date.strftime('%d %b %Y, %H:%M') if tender.bid_end_date else "N/A" }}
-                        </td>
-                        <td>
-                            {% if not tender.is_notified %}
-                            <span class="badge new">NEW</span>
-                            {% endif %}
-
-                            {% if tender.bid_end_date and current_time %}
-                            {% set time_left = (tender.bid_end_date - current_time).total_seconds() %}
-
-                            {% if tender.bid_start_date and (tender.bid_start_date - current_time).total_seconds() > 0
-                            %}
-                            <span class="badge" style="background-color: #607d8b; color: white;">UPCOMING</span>
-                            {% elif time_left < 0 %} <span class="badge closed">CLOSED</span>
-                                {% elif time_left < 86400 %} <span class="badge closing">CLOSING SOON</span>
-                                    {% else %}
-                                    <span class="badge open">OPEN</span>
+                            <!-- 1. Bid Details -->
+                            <td>
+                                <div class="bid-id-col">
+                                    {{ tender.gem_bid_number }}
+                                    {% if tender.document_url %}
+                                    <a href="{{ tender.document_url }}" target="_blank"
+                                        title="Download Specification PDF">
+                                        <i data-feather="file-text" class="pdf-icon" width="16" height="16"></i>
+                                    </a>
                                     {% endif %}
+                                </div>
+                                <div class="cell-truncate text-dim" style="font-size: 0.75rem; margin-top: 4px;"
+                                    title="{{ tender.department_name }}">
+                                    {{ tender.department_name or "Department Unavailable" }}
+                                </div>
+                            </td>
+
+                            <!-- 2. Items & Category -->
+                            <td>
+                                {% set cat_class = "" %}
+                                {% if tender.category|lower == 'q-line' %}{% set cat_class = "brand-q-line" %}
+                                {% elif tender.category|lower == 'heidelco' %}{% set cat_class = "brand-heidelco" %}
+                                {% elif tender.category|lower == 'poct' %}{% set cat_class = "brand-poct" %}
+                                {% elif tender.category|lower == 'iqline' %}{% set cat_class = "brand-iqline" %}
+                                {% endif %}
+
+                                <span class="tag-badge tag-brand {{ cat_class }}"
+                                    style="margin-bottom: 6px; display: inline-block;">
+                                    {{ tender.category or 'General' }}
+                                </span>
+                                <div class="cell-truncate" title="{{ tender.items_str }}" style="font-weight: 500;">
+                                    {{ tender.items_str }}
+                                </div>
+                            </td>
+
+                            <!-- 3. Quantity -->
+                            <td data-raw="{{ tender.quantity or 0 }}">
+                                <span class="qty-badge">{{ tender.quantity or 1 }}</span>
+                            </td>
+
+                            <!-- 4. EMD Amount -->
+                            <td class="amount-col" data-raw="{{ tender.emd_amount or 0 }}">
+                                {% if tender.emd_amount %}
+                                {{ "{:,.2f}".format(tender.emd_amount) }}
+                                {% else %}
+                                <span class="text-dim" style="font-size: 0.75rem;">NIL / NA</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- 5. Timeline (Start & End) -->
+                            <td data-raw="{{ tender.bid_end_date.isoformat() if tender.bid_end_date else '0' }}">
+                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 2px;">
+                                    Start: {{ tender.bid_start_date.strftime('%d %b %Y') if tender.bid_start_date else
+                                    "--" }}
+                                </div>
+                                <div style="font-weight: 500;">
+                                    End: {{ tender.bid_end_date.strftime('%d %b %Y, %H:%M') if tender.bid_end_date else
+                                    "--" }}
+                                </div>
+                            </td>
+
+                            <!-- 6. Flags/State (Combined Tags) -->
+                            <td data-raw="{{ 'N' if not tender.is_notified else 'Z' }}">
+                                <div class="badges-wrapper">
+                                    {% if not tender.is_notified %}
+                                    <span class="tag-badge tag-state-new">NEW</span>
                                     {% endif %}
 
-                                    {% if tender.mii_applicable %}
-                                    <span class="badge mii">MII</span>
-                                    {% endif %}
-                                    {% if tender.mse_preference %}
-                                    <span class="badge mse">MSE</span>
-                                    {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                                    {% if tender.bid_end_date and current_time %}
+                                    {% set time_left = (tender.bid_end_date - current_time).total_seconds() %}
+                                    {% if tender.bid_start_date and (tender.bid_start_date -
+                                    current_time).total_seconds() > 0 %}
+                                    <span class="tag-badge tag-state-upcoming">UPCOMING</span>
+                                    {% elif time_left < 0 %} <span class="tag-badge tag-state-closed">CLOSED</span>
+                                        {% elif time_left < 86400 %} <span class="tag-badge tag-state-closing">
+                                            CLOSING</span>
+                                            {% endif %}
+                                            {% endif %}
 
-            <!-- Pagination Controls -->
-            <div id="pagination-bar"
-                style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-top: 1px solid var(--border-color);">
-                <span id="pagination-info" style="color: var(--text-secondary); font-size: 0.85rem;"></span>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button id="prev-page-btn" onclick="changePage(-1)"
-                        style="padding: 0.4rem 1rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--surface-color); color: var(--text-primary); cursor: pointer;">
-                        ← Prev
-                    </button>
-                    <button id="next-page-btn" onclick="changePage(1)"
-                        style="padding: 0.4rem 1rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--surface-color); color: var(--text-primary); cursor: pointer;">
-                        Next →
-                    </button>
+                                            {% if tender.mii_applicable %}
+                                            <span class="tag-badge tag-flag-mii" title="Make in India">MII</span>
+                                            {% endif %}
+                                            {% if tender.mse_preference %}
+                                            <span class="tag-badge tag-flag-mse"
+                                                title="Micro & Small Enterprises">MSE</span>
+                                            {% endif %}
+                                </div>
+                            </td>
+
+                            <!-- 7. Tracking Status -->
+                            <td data-raw="{{ tender.status or 'Open' }}">
+                                <select class="status-select status-{{ tender.status or 'Open' }}"
+                                    onchange="updateTrackingStatus('{{ tender.id }}', this)"
+                                    data-prev-val="{{ tender.status or 'Open' }}">
+                                    <option value="Open" {% if tender.status=='Open' or not tender.status %}selected{%
+                                        endif %}>Open</option>
+                                    <option value="Submitted" {% if tender.status=='Submitted' %}selected{% endif %}>
+                                        Submitted</option>
+                                    <option value="Won" {% if tender.status=='Won' %}selected{% endif %}>Won</option>
+                                    <option value="Lost" {% if tender.status=='Lost' %}selected{% endif %}>Lost</option>
+                                </select>
+                            </td>
+
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Bar -->
+            <div class="pagination-bar">
+                <div id="pagination-info" class="pagination-info">Page 1</div>
+                <div class="pagination-btns">
+                    <button id="prev-page-btn" class="btn-page" onclick="changePage(-1)">Previous</button>
+                    <button id="next-page-btn" class="btn-page" onclick="changePage(1)">Next</button>
                 </div>
-            </div>
-
-            <div id="empty-state" class="empty-state" {% if total_tenders> 0 %}style="display: none;"{% endif %}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--border-color)"
-                    stroke-width="1.5" style="margin-bottom: 15px;">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                    <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-                <h3>Waiting for first data pull</h3>
-                <p>The Playwright scraper is currently running in the background. Data will appear here once the first
-                    sweep is completed.</p>
             </div>
         </div>
     </div>
 
-    <!-- Hidden data container for JS to avoid IDE syntax errors in <script> blocks -->
-    <div id="app-data" data-last-id="{% if tenders and tenders|length > 0 %}{{ tenders[0].id }}{% else %}0{% endif %}"
-        data-known-ids="{% for t in tenders %}{{ t.id }}{% if not loop.last %},{% endif %}{% endfor %}"
-        style="display: none;">
+    <!-- Toast Component -->
+    <div id="toast" class="toast">
+        <i data-feather="check-circle" width="18"></i>
+        <span id="toast-msg">Success</span>
     </div>
-
-    <div id="toast-container"></div>
 
     <script>
-        // Safely parse variables from data attributes to keep the IDE's JS linter happy
-        const appData = document.getElementById('app-data');
+        // Initialize Feather Icons
+        feather.replace();
 
-        let lastKnownMaxId = parseInt(appData.getAttribute('data-last-id') || "0", 10);
+        // --- Toast Logic ---
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = message;
 
-        const knownIdsStr = appData.getAttribute('data-known-ids') || "";
-        const knownIdsArray = knownIdsStr.split(',').map(id => parseInt(id, 10)).filter(id => !isNaN(id));
-        let knownIds = new Set(knownIdsArray);
+            if (isError) {
+                toast.style.backgroundColor = "var(--accent-danger)";
+                toast.innerHTML = `<i data-feather="x-circle" width="18"></i> <span>${message}</span>`;
+            } else {
+                toast.style.backgroundColor = "var(--accent-success)";
+                toast.innerHTML = `<i data-feather="check-circle" width="18"></i> <span>${message}</span>`;
+            }
+            feather.replace();
 
-
-        function showToast(message) {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.innerHTML = `
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-pink)" stroke-width="2">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-                <span>${message}</span>
-            `;
-            container.appendChild(toast);
-
-            // Trigger animation
-            setTimeout(() => toast.classList.add('show'), 10);
-
-            // Remove after 5 seconds
+            toast.classList.add('show');
             setTimeout(() => {
                 toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 400);
-            }, 5000);
+            }, 3000);
         }
 
-        function createTableRow(tender) {
-            const dateStr = tender.bid_end_date ? new Date(tender.bid_end_date).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : "N/A";
-            const rawDate = tender.bid_end_date ? new Date(tender.bid_end_date).toISOString() : "";
-
-            const startDateStr = tender.bid_start_date ? new Date(tender.bid_start_date).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : "N/A";
-            const rawStartDate = tender.bid_start_date ? new Date(tender.bid_start_date).toISOString() : "";
-
-            let badges = '<span class="badge new">NEW</span>';
-
-            if (tender.bid_start_date && tender.bid_end_date) {
-                const now = new Date();
-                const start = new Date(tender.bid_start_date);
-                const end = new Date(tender.bid_end_date);
-                const timeLeft = end.getTime() - now.getTime();
-                const timeBeforeStart = start.getTime() - now.getTime();
-
-                if (timeBeforeStart > 0) {
-                    badges += '<span class="badge" style="background-color: #607d8b; color: white;">UPCOMING</span>';
-                } else if (timeLeft < 0) {
-                    badges += '<span class="badge closed">CLOSED</span>';
-                } else if (timeLeft < 86400000) { // Less than 24 hours
-                    badges += '<span class="badge closing">CLOSING SOON</span>';
-                } else {
-                    badges += '<span class="badge open">OPEN</span>';
-                }
-            }
-
-            if (tender.mii_applicable) badges += '<span class="badge mii">MII</span>';
-            if (tender.mse_preference) badges += '<span class="badge mse">MSE</span>';
-
-            let cat_class = "cat-general";
-            const cat_lower = (tender.category || "General").toLowerCase();
-            if (cat_lower === "q-line") cat_class = "cat-q-line";
-            else if (cat_lower === "heidelco") cat_class = "cat-heidelco";
-            else if (cat_lower === "poct") cat_class = "cat-poct";
-            else if (cat_lower === "iqline") cat_class = "cat-iqline";
-
-            const isChecked = tender.is_visited ? "checked" : "";
-            const rowClass = tender.is_visited ? "is-visited" : "";
-
-            let pdfLinkHtml = "";
-            if (tender.document_url) {
-                pdfLinkHtml = `
-                <a href="${tender.document_url}" target="_blank" class="pdf-link" title="Download PDF">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                </a>`;
-            }
-
-            return `
-                <tr data-id="${tender.id}" class="${rowClass}">
-                    <td>
-                        <input type="checkbox" class="visited-cb" title="Mark as Visited" 
-                            onclick="toggleVisited(${tender.id}, this)" ${isChecked}>
-                    </td>
-                    <td class="bid-id">
-                        ${tender.gem_bid_number} ${pdfLinkHtml}
-                    </td>
-                    <td>
-                        <span class="cat-badge ${cat_class}">${tender.category || 'General'}</span>
-                    </td>
-                    <td>
-                        <div class="department truncate" title="${tender.department_name || 'N/A'}">${tender.department_name || 'N/A'}</div>
-                    </td>
-                    <td>
-                        <div class="items truncate" title="${tender.items_str}">${tender.items_str}</div>
-                    </td>
-                    <td style="color: var(--accent-pink); font-weight: 600;">
-                        ${tender.quantity || 1}
-                    </td>
-                    <td class="amount" data-raw="0">
-                        <span style="color: var(--text-secondary);">Nil / NA</span>
-                    </td>
-                    <td style="color: var(--text-secondary); font-size: 0.85rem;" data-raw="${rawStartDate}">
-                        ${startDateStr}
-                    </td>
-                    <td style="color: var(--text-primary); font-size: 0.9rem;" data-raw="${rawDate}">
-                        ${dateStr}
-                    </td>
-                    <td>${badges}</td>
-                </tr>
-            `;
-        }
-
-        // --- SORTING LOGIC ---
+        // --- Table Sorting Logic ---
         let currentSortColumn = -1;
         let isAscending = true;
 
         function sortTable(columnIndex, type) {
             const table = document.getElementById("tenders-table");
-            const tbody = document.getElementById("tenders-body");
-            const rows = Array.from(tbody.querySelectorAll("tr"));
-            const headers = table.querySelectorAll("th");
+            const tbody = document.getElementById('tenders-body');
+            // Select all rows (both filtered and unfiltered)
+            const rows = Array.from(tbody.querySelectorAll('tr'));
 
-            // Toggle direction if same column
+            if (rows.length === 0) return;
+
+            // Header classes
+            const headers = table.querySelectorAll('th');
+
             if (currentSortColumn === columnIndex) {
                 isAscending = !isAscending;
             } else {
@@ -744,7 +1061,6 @@
                 currentSortColumn = columnIndex;
             }
 
-            // Update header UI
             headers.forEach(th => {
                 th.classList.remove("sort-asc", "sort-desc");
             });
@@ -754,59 +1070,61 @@
                 let cellA = a.cells[columnIndex];
                 let cellB = b.cells[columnIndex];
 
-                let valA = cellA.getAttribute("data-raw") || cellA.innerText.trim();
-                let valB = cellB.getAttribute("data-raw") || cellB.innerText.trim();
+                let valA = cellA.hasAttribute("data-raw") ? cellA.getAttribute("data-raw") : cellA.innerText.trim();
+                let valB = cellB.hasAttribute("data-raw") ? cellB.getAttribute("data-raw") : cellB.innerText.trim();
 
                 if (type === 'number') {
                     valA = parseFloat(valA.replace(/[^0-9.-]+/g, "")) || 0;
                     valB = parseFloat(valB.replace(/[^0-9.-]+/g, "")) || 0;
                     return isAscending ? valA - valB : valB - valA;
                 } else if (type === 'date') {
-                    valA = valA ? new Date(valA).getTime() : 0;
-                    valB = valB ? new Date(valB).getTime() : 0;
+                    valA = valA ? new Date(valA).getTime() : (isAscending ? Infinity : -Infinity);
+                    valB = valB ? new Date(valB).getTime() : (isAscending ? Infinity : -Infinity);
+
+                    if (Number.isNaN(valA)) valA = isAscending ? Infinity : -Infinity;
+                    if (Number.isNaN(valB)) valB = isAscending ? Infinity : -Infinity;
+
                     return isAscending ? valA - valB : valB - valA;
                 } else {
                     return isAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 }
             });
 
-            // Re-append rows
+            // Re-append sorted rows
             rows.forEach(row => tbody.appendChild(row));
-            applyPagination(); // Re-apply pagination after sort
+
+            // Reapply pagination (maintains filter states)
+            applyPagination();
         }
 
-        // --- PAGINATION LOGIC ---
+        // --- Pagination Logic ---
         const ROWS_PER_PAGE = 25;
         let currentPage = 1;
 
         function applyPagination() {
             const tbody = document.getElementById('tenders-body');
-            // Only visible rows (after filter)
-            const visibleRows = Array.from(tbody.querySelectorAll('tr')).filter(r => r.style.display !== 'none');
-            const totalRows = visibleRows.length;
+            // Only count rows that are NOT filtered out by search/dropdowns
+            const validRows = Array.from(tbody.querySelectorAll('tr:not(.filtered-out)'));
+            const totalRows = validRows.length;
             const totalPages = Math.max(1, Math.ceil(totalRows / ROWS_PER_PAGE));
 
-            // Clamp currentPage
+            // Clamp
             if (currentPage > totalPages) currentPage = totalPages;
             if (currentPage < 1) currentPage = 1;
 
             const start = (currentPage - 1) * ROWS_PER_PAGE;
             const end = start + ROWS_PER_PAGE;
 
-            // Hide rows outside current page
-            visibleRows.forEach((row, idx) => {
+            // Base state: hide logically visible rows if they are outside the page view
+            validRows.forEach((row, idx) => {
                 row.style.display = (idx >= start && idx < end) ? '' : 'none';
             });
 
-            // Update info text
-            const info = document.getElementById('pagination-info');
-            if (info) info.innerText = `Page ${currentPage} of ${totalPages} (${totalRows} results)`;
+            // Update footer
+            document.getElementById('pagination-info').innerText = `Page ${currentPage} of ${totalPages} (${totalRows} visible rows)`;
 
-            // Enable/Disable prev/next buttons
-            const prevBtn = document.getElementById('prev-page-btn');
-            const nextBtn = document.getElementById('next-page-btn');
-            if (prevBtn) prevBtn.disabled = currentPage <= 1;
-            if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+            document.getElementById('prev-page-btn').disabled = currentPage <= 1;
+            document.getElementById('next-page-btn').disabled = currentPage >= totalPages;
         }
 
         function changePage(delta) {
@@ -816,7 +1134,7 @@
         }
 
 
-        // --- VISITED TOGGLE API ---
+        // --- Tracking Status API & Visited API ---
         async function toggleVisited(tenderId, checkboxElem) {
             const isChecked = checkboxElem.checked;
             const tr = document.querySelector(`tr[data-id="${tenderId}"]`);
@@ -834,85 +1152,129 @@
                     } else {
                         tr.classList.remove('is-visited');
                     }
+                    if (document.getElementById('hideVisitedFilter').checked) {
+                        applyFilters(); // Re-evaluate if hidden
+                    }
                 } else {
-                    checkboxElem.checked = !isChecked; // Revert on failure
-                    showToast("Failed to update status");
+                    checkboxElem.checked = !isChecked;
+                    showToast("Failed to update status", true);
                 }
             } catch (error) {
-                console.error("Error toggling status", error);
-                checkboxElem.checked = !isChecked; // Revert on error
+                console.error("Error", error);
+                checkboxElem.checked = !isChecked;
             }
         }
 
-        // --- FILTERING LOGIC ---
-        const searchInput = document.getElementById('searchInput');
-        const brandFilter = document.getElementById('brandFilter');
-        const hideVisitedFilter = document.getElementById('hideVisitedFilter');
+        async function updateTrackingStatus(tenderId, selectElem) {
+            const newStatus = selectElem.value;
+            const prevStatus = selectElem.getAttribute('data-prev-val');
 
+            try {
+                const response = await fetch(`/api/tenders/${tenderId}/status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (response.ok) {
+                    // Update classes for color styling
+                    selectElem.className = `status-select status-${newStatus}`;
+                    selectElem.setAttribute('data-prev-val', newStatus);
+                    // Update data-raw for sorting
+                    selectElem.closest('td').setAttribute('data-raw', newStatus);
+                    showToast(`Bid marked as ${newStatus}`);
+
+                } else {
+                    selectElem.value = prevStatus;
+                    showToast("Failed to update tracking", true);
+                }
+            } catch (e) {
+                console.error(e);
+                selectElem.value = prevStatus;
+                showToast("Network Error", true);
+            }
+        }
+
+        // --- Unified Filtering Logic ---
         function applyFilters() {
-            const searchText = searchInput.value.toLowerCase();
-            const selectedBrand = brandFilter.value.toLowerCase();
-            const hideVisited = hideVisitedFilter.checked;
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            const brandVal = document.getElementById('brandFilter').value.toLowerCase();
+            const trackVal = document.getElementById('statusFilter').value; // Case exact
+            const hideVisited = document.getElementById('hideVisitedFilter').checked;
 
-            const tbody = document.getElementById('tenders-body');
-            const rows = tbody.querySelectorAll('tr');
+            const rows = document.querySelectorAll('#tenders-body tr');
             let visibleCount = 0;
 
             rows.forEach(row => {
                 let isVisible = true;
 
-                // 1. Hide Visited filter
+                // 1. Visited
                 if (hideVisited && row.classList.contains('is-visited')) {
                     isVisible = false;
                 }
 
-                // 2. Brand Dropdown filter
-                if (isVisible && selectedBrand !== 'all') {
-                    // Extract the text of the cat-badge from the 3rd column
-                    const badgeText = row.querySelector('.cat-badge').innerText.trim().toLowerCase();
-                    if (badgeText !== selectedBrand) {
-                        isVisible = false;
-                    }
+                // 2. Brand
+                if (isVisible && brandVal !== 'all') {
+                    const badgeText = row.querySelector('.tag-brand').innerText.trim().toLowerCase();
+                    if (badgeText !== brandVal) isVisible = false;
                 }
 
-                // 3. Search Text filter (Bid No, Dept, Items)
+                // 3. Tracking Status
+                if (isVisible && trackVal !== 'All') {
+                    const statusVal = row.querySelector('.status-select').value;
+                    if (statusVal !== trackVal) isVisible = false;
+                }
+
+                // 4. Search
                 if (isVisible && searchText.length > 0) {
-                    const rowText = row.innerText.toLowerCase();
-                    if (!rowText.includes(searchText)) {
-                        isVisible = false;
-                    }
+                    const text = row.innerText.toLowerCase();
+                    if (!text.includes(searchText)) isVisible = false;
                 }
 
-                // Apply visibility and count
+                // Apply DOM classes
                 if (isVisible) {
-                    row.style.display = '';
+                    row.classList.remove('filtered-out');
+                    row.style.display = ''; // Reset core style
                     visibleCount++;
                 } else {
-                    row.style.display = 'none';
+                    row.classList.add('filtered-out');
+                    row.style.display = 'none'; // Force hide
                 }
             });
 
-            // Update Counter
-            const countLabel = document.getElementById('filterResultCount');
-            const totalRows = rows.length;
-            if (visibleCount === totalRows) {
-                countLabel.innerText = "Showing all bids";
+            const countEl = document.getElementById('filterResultCount');
+            if (visibleCount === rows.length) {
+                countEl.innerText = `Showing all ${rows.length} bids`;
             } else {
-                countLabel.innerText = `Filtered: ${visibleCount} of ${totalRows} bids`;
+                countEl.innerText = `Filtered: ${visibleCount} items match`;
             }
 
-            // Reset to first page whenever filter changes
             currentPage = 1;
             applyPagination();
         }
 
-        // Attach event listeners to filter controls
-        searchInput.addEventListener('input', applyFilters);
-        brandFilter.addEventListener('change', applyFilters);
-        hideVisitedFilter.addEventListener('change', applyFilters);
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.getElementById('brandFilter').addEventListener('change', applyFilters);
+        document.getElementById('statusFilter').addEventListener('change', applyFilters);
+        document.getElementById('hideVisitedFilter').addEventListener('change', applyFilters);
 
-        // Initialize pagination on page load
+        // Init on load
         applyPagination();
+
+        // --- Live Polling Logic ---
+        async function fetchAnalytics() {
+            try {
+                const response = await fetch('/api/analytics');
+                const data = await response.json();
+
+                document.getElementById('stat-total').innerText = data.total_bids || 0;
+                document.getElementById('stat-open').innerText = data.status_breakdown['Open'] || 0;
+                document.getElementById('stat-submitted').innerText = data.status_breakdown['Submitted'] || 0;
+                document.getElementById('stat-won').innerText = data.status_breakdown['Won'] || 0;
+            } catch (e) {
+                console.error("Failed to load analytics: ", e);
+            }
+        }
 
         async function pollForNewTenders() {
             try {
@@ -922,53 +1284,99 @@
                 let newTendersFound = 0;
                 const tbody = document.getElementById('tenders-body');
 
-                // Process newest bids (they come ordered by date)
-                data.tenders.forEach(tender => {
-                    if (!knownIds.has(tender.id)) {
-                        knownIds.add(tender.id);
+                // Process newest
+                data.tenders.forEach(t => {
+                    const existingRow = tbody.querySelector(`tr[data-id="${t.id}"]`);
+                    if (!existingRow) {
                         newTendersFound++;
+                        const tr = document.createElement('tr');
+                        tr.setAttribute('data-id', t.id);
+                        tr.className = "row-data newly-added";
 
-                        // Create HTML string for new row
-                        const html = createTableRow(tender);
+                        // Fallback UI generation logic (same structure as jinja but in JS)
+                        let brandClass = "";
+                        const cat = (t.category || "").toLowerCase();
+                        if (cat === 'q-line') brandClass = "brand-q-line";
+                        else if (cat === 'heidelco') brandClass = "brand-heidelco";
+                        else if (cat === 'poct') brandClass = "brand-poct";
+                        else if (cat === 'iqline') brandClass = "brand-iqline";
 
-                        // Insert at the top of the table
-                        tbody.insertAdjacentHTML('afterbegin', html);
+                        const pdfLink = t.document_url ? `<a href="${t.document_url}" target="_blank" title="Download Specification PDF">
+                            <i data-feather="file-text" class="pdf-icon" width="16" height="16"></i></a>` : "";
 
-                        // Highlight animation for new row
-                        const newRow = tbody.firstElementChild;
-                        newRow.style.backgroundColor = 'rgba(216, 27, 96, 0.2)';
-                        setTimeout(() => {
-                            newRow.style.transition = 'background-color 2s ease';
-                            newRow.style.backgroundColor = '';
-                        }, 500);
+                        // Format Money
+                        const amountStr = t.emd_amount ? `₹ ` + t.emd_amount.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : `<span class="text-dim" style="font-size: 0.75rem;">NIL / NA</span>`;
+
+                        // Format Dates loosely
+                        const startStr = t.bid_start_date ? t.bid_start_date.split('T')[0] : "--";
+                        const endStr = t.bid_end_date ? t.bid_end_date.replace('T', ' ').substring(0, 16) : "--";
+
+                        // Notice how we use the new exact DOM structure
+                        tr.innerHTML = `
+                            <td style="text-align: center;">
+                                <input type="checkbox" class="custom-checkbox visited-cb" onclick="toggleVisited(${t.id}, this)">
+                            </td>
+                            
+                            <td>
+                                <div class="bid-id-col">${t.gem_bid_number} ${pdfLink}</div>
+                                <div class="cell-truncate text-dim" style="font-size: 0.75rem; margin-top: 4px;" title="${t.department_name}">${t.departmentName || "Department Unavailable"}</div>
+                            </td>
+                            
+                            <td>
+                                <span class="tag-badge tag-brand ${brandClass}" style="margin-bottom: 6px; display: inline-block;">${t.category || 'General'}</span>
+                                <div class="cell-truncate" title="${t.items_str}" style="font-weight: 500;">${t.items_str}</div>
+                            </td>
+                            
+                            <td data-raw="${t.quantity}"><span class="qty-badge">${t.quantity}</span></td>
+                            <td class="amount-col" data-raw="${t.emd_amount || 0}">${amountStr}</td>
+                            
+                            <td data-raw="${t.bid_end_date || '0'}">
+                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 2px;">Start: ${startStr}</div>
+                                <div style="font-weight: 500;">End: ${endStr}</div>
+                            </td>
+                            
+                            <td data-raw="${t.is_notified ? 'Z' : 'N'}">
+                                <div class="badges-wrapper">
+                                    <span class="tag-badge tag-state-new">NEW</span>
+                                    ${t.mii_applicable ? '<span class="tag-badge tag-flag-mii">MII</span>' : ''}
+                                    ${t.mse_preference ? '<span class="tag-badge tag-flag-mse">MSE</span>' : ''}
+                                </div>
+                            </td>
+                            
+                        <td data-raw="${t.status || 'Open'}">
+                                <select class="status-select status-${t.status || 'Open'}" 
+                                        onchange="updateTrackingStatus(${t.id}, this)"
+                                        data-prev-val="${t.status || 'Open'}">
+                                    <option value="Open" selected>Open</option>
+                                    <option value="Submitted">Submitted</option>
+                                    <option value="Won">Won</option>
+                                    <option value="Lost">Lost</option>
+                                </select>
+                            </td>
+                        `;
+
+                        // Insert at top logically according to new sort default (latest created)
+                        tbody.insertBefore(tr, tbody.firstChild);
                     }
                 });
 
                 if (newTendersFound > 0) {
-                    showToast(`Alert: ${newTendersFound} new bid(s) arrived!`);
-
-                    // Update stats
-                    const totalEl = document.querySelector('.stat-value');
-                    totalEl.innerText = data.count;
-
-                    // Show table, hide empty state if applicable
-                    document.getElementById('tenders-table').style.display = 'table';
-                    document.getElementById('empty-state').style.display = 'none';
-
-                    // Update sync time
-                    document.querySelector('.time-badge').innerText = 'Live DB Sycned: Just now';
-
-                    // Re-apply filters so new bids don't bypass actively set filters
-                    applyFilters();
+                    showToast(`${newTendersFound} New Tenders Found!`);
+                    feather.replace(); // Refresh icons
+                    applyFilters(); // Re-apply current state cleanly
+                    fetchAnalytics(); // Grab updated numbers
                 }
 
-            } catch (error) {
-                console.error("Polling error:", error);
+            } catch (e) {
+                console.error("Polling error: ", e);
             }
         }
 
-        // Poll every 15 seconds
-        setInterval(pollForNewTenders, 15000);
+        // Fetch numbers instantly on page load
+        fetchAnalytics();
+
+        // Poll every 35 seconds
+        setInterval(pollForNewTenders, 35000);
 
     </script>
 </body>

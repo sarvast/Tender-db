@@ -5,21 +5,53 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel
 from typing import List, Optional
+import asyncio
 
 from models import SessionLocal, Tender
 from database_manager import process_and_save_bids
 from excel_exporter import sync_latest_bids_to_excel
+from telegram_notifier import send_telegram_alert
 
 app = FastAPI(title="GeM Tender Auto-Tracker")
 
 # In-memory store for scraper heartbeat (resets on server restart, that's fine)
-_scraper_heartbeat = {"last_seen": None}
+_scraper_heartbeat = {"last_seen": None, "alert_sent": False}
 
 # Set up templates
 templates = Jinja2Templates(directory="templates")
+
+async def monitor_scraper_health():
+    """Background task to check if the scraper has silently died."""
+    while True:
+        try:
+            await asyncio.sleep(3600) # Check once an hour
+            
+            last = _scraper_heartbeat.get("last_seen")
+            if not last:
+                continue
+                
+            delta = datetime.now() - datetime.fromisoformat(last)
+            hours_ago = delta.total_seconds() / 3600
+            
+            if hours_ago > 12 and not _scraper_heartbeat.get("alert_sent"):
+                alert_msg = f"⚠️ *CRITICAL ALERT*\n\nThe Local GeM Scraper has not sent a heartbeat in over {int(hours_ago)} hours.\nIt may have crashed or the host PC is off."
+                send_telegram_alert(alert_msg)
+                _scraper_heartbeat["alert_sent"] = True
+                
+            elif hours_ago <= 12 and _scraper_heartbeat.get("alert_sent"):
+                # Reset if it comes back alive
+                _scraper_heartbeat["alert_sent"] = False
+                send_telegram_alert("✅ Scraper connection recovered.")
+                
+        except Exception as e:
+            print(f"Health monitor error: {e}")
+
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(monitor_scraper_health())
 
 # Pydantic models for API ingestion
 class TenderCreate(BaseModel):
@@ -35,6 +67,7 @@ class TenderCreate(BaseModel):
     mii_applicable: Optional[bool] = False
     mse_preference: Optional[bool] = False
     is_visited: Optional[bool] = False
+    status: Optional[str] = "Open"
     document_url: Optional[str] = None
 
 class TenderUploadRequest(BaseModel):
@@ -117,7 +150,7 @@ async def get_latest_tenders(db: Session = Depends(get_db)):
     """
     API endpoint for the dashboard frontend to poll for new tenders dynamically.
     """
-    tenders = db.query(Tender).order_by(Tender.bid_end_date.desc()).all()
+    tenders = db.query(Tender).order_by(Tender.created_at.desc(), Tender.id.desc()).all()
     # Format for JSON response
     result = []
     for t in tenders:
@@ -134,10 +167,44 @@ async def get_latest_tenders(db: Session = Depends(get_db)):
             "mii_applicable": t.mii_applicable,
             "mse_preference": t.mse_preference,
             "is_visited": getattr(t, 'is_visited', False),
+            "status": getattr(t, 'status', 'Open') or 'Open',
             "document_url": getattr(t, 'document_url', None),
             "is_notified": t.is_notified
         })
     return {"count": len(result), "tenders": result}
+
+@app.get("/api/analytics")
+async def get_analytics(db: Session = Depends(get_db)):
+    """
+    API endpoint for the dashboard to fetch historical analytics and breakdown.
+    """
+    tenders = db.query(Tender).all()
+    if not tenders:
+        return {"total_bids": 0, "categories": {}, "status_breakdown": {}}
+        
+    df = pd.DataFrame([{
+        "category": t.category or "General",
+        "status": t.status or "Open",
+        "value": t.emd_amount or 0
+    } for t in tenders])
+    
+    # Aggregations
+    cat_counts = df['category'].value_counts().to_dict()
+    status_counts = df['status'].value_counts().to_dict()
+    
+    # Ensure default keys
+    for key in ['Won', 'Lost', 'Submitted', 'Open']:
+        if key not in status_counts:
+            status_counts[key] = 0
+            
+    total_won_value = df[df['status'] == 'Won']['value'].sum()
+            
+    return {
+        "total_bids": len(tenders),
+        "categories": cat_counts,
+        "status_breakdown": status_counts,
+        "total_won_emd_value": float(total_won_value)
+    }
 
 class VisitedUpdate(BaseModel):
     is_visited: bool
@@ -152,6 +219,19 @@ def update_visited_status(tender_id: int, status: VisitedUpdate, db: Session = D
     db.commit()
     db.refresh(tender) # Refresh to get the latest state from the DB
     return {"message": "Status updated successfully", "id": tender.id, "is_visited": tender.is_visited}
+
+class TrackingStatusUpdate(BaseModel):
+    status: str
+
+@app.post("/api/tenders/{tender_id}/status")
+def update_tracking_status(tender_id: int, update: TrackingStatusUpdate, db: Session = Depends(get_db)):
+    tender = db.query(Tender).filter(Tender.id == tender_id).first()
+    if not tender:
+        raise HTTPException(status_code=404, detail="Tender not found")
+        
+    tender.status = update.status
+    db.commit()
+    return {"message": "Tracking status updated", "id": tender.id, "status": tender.status}
 
 @app.get("/download-excel")
 async def download_excel():
