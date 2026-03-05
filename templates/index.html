@@ -777,7 +777,7 @@
         <div class="header-actions">
             <div class="time-badge">
                 <div class="pulse-dot"></div>
-                Live Sync: &nbsp;<span style="color: var(--text-primary);">{{ last_updated }}</span>
+                Live Sync: &nbsp;<span id="sync-time" style="color: var(--text-primary);">{{ last_updated }}</span>
             </div>
             <a href="/download-excel" class="btn-download">
                 <i data-feather="download" style="width: 14px; height: 14px;"></i>
@@ -1202,6 +1202,11 @@
             const trackVal = document.getElementById('statusFilter').value; // Case exact
             const hideVisited = document.getElementById('hideVisitedFilter').checked;
 
+            // Persist to localStorage
+            localStorage.setItem('gem_hide_visited', hideVisited);
+            localStorage.setItem('gem_brand_filter', brandVal);
+            localStorage.setItem('gem_status_filter', trackVal);
+
             const rows = document.querySelectorAll('#tenders-body tr');
             let visibleCount = 0;
 
@@ -1258,8 +1263,21 @@
         document.getElementById('statusFilter').addEventListener('change', applyFilters);
         document.getElementById('hideVisitedFilter').addEventListener('change', applyFilters);
 
-        // Init on load
-        applyPagination();
+        // Init on load: Restore Filter states
+        const savedHide = localStorage.getItem('gem_hide_visited');
+        if (savedHide !== null) {
+            document.getElementById('hideVisitedFilter').checked = (savedHide === 'true');
+        }
+        const savedBrand = localStorage.getItem('gem_brand_filter');
+        if (savedBrand) {
+            document.getElementById('brandFilter').value = savedBrand;
+        }
+        const savedStatus = localStorage.getItem('gem_status_filter');
+        if (savedStatus) {
+            document.getElementById('statusFilter').value = savedStatus;
+        }
+
+        applyFilters();
 
         // --- Live Polling Logic ---
         async function fetchAnalytics() {
@@ -1366,6 +1384,13 @@
                     applyFilters(); // Re-apply current state cleanly
                     fetchAnalytics(); // Grab updated numbers
                 }
+
+                // Update Live Sync Time (IST format)
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
+                const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+                const syncEl = document.getElementById('sync-time');
+                if (syncEl) syncEl.innerText = `${dateStr}, ${timeStr}`;
 
             } catch (e) {
                 console.error("Polling error: ", e);
